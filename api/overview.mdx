@@ -1,0 +1,56 @@
+---
+title: "Scheduler API overview"
+description: "Integrate the high-performance Go scheduling engine into your own application to automatically assign volunteers to shifts."
+---
+
+The Scheduler API is an external Go service that runs the same automatic volunteer-to-shift assignment engine that powers the Shift Scheduler web app. You can call it directly from your own application to schedule any set of volunteers and shifts, receive a fairness-scored result, and surface any conflicts.
+
+<Note>
+  This is an external API hosted separately from the Shift Scheduler web app. To get an API key, email [arnav.shah.2k10@gmail.com](mailto:arnav.shah.2k10@gmail.com).
+</Note>
+
+## Base URL
+
+```
+https://shift-scheduler-api-3nxm.vercel.app
+```
+
+## Endpoints
+
+<CardGroup cols={2}>
+  <Card title="POST /api/schedule" icon="calendar-check" href="/api/endpoints#post-apischedule">
+    Run the scheduling engine on a JSON payload of volunteers and shifts. Returns assignments, unfilled shifts, and a fairness score.
+  </Card>
+  <Card title="POST /api/schedule/csv" icon="file-csv" href="/api/endpoints#post-apischedulecsvcsv">
+    Same scheduling engine, but accepts CSV files via multipart/form-data instead of JSON.
+  </Card>
+  <Card title="POST /api/validate" icon="circle-check" href="/api/endpoints#post-apivalidate">
+    Validate your request payload without running the scheduler. Use this to debug data format issues before submitting.
+  </Card>
+  <Card title="GET /api/usage" icon="chart-bar" href="/api/endpoints#get-apiusage">
+    Retrieve your current API quota and usage history.
+  </Card>
+</CardGroup>
+
+## Endpoint summary
+
+| Method | Path | Description |
+| :----- | :--- | :---------- |
+| `POST` | `/api/schedule` | Run the scheduler with a JSON body |
+| `POST` | `/api/schedule/csv` | Run the scheduler with CSV file uploads |
+| `POST` | `/api/validate` | Validate a request payload |
+| `GET` | `/api/usage` | Check quota and usage history |
+
+## Authentication
+
+All requests require an HMAC-signed API key passed in the `Authorization` header:
+
+```http
+Authorization: Bearer [user_id].[signature]
+```
+
+See [Authentication](/api/authentication) for details on the key format, how to request a key, and error responses.
+
+## JavaScript SDK
+
+The scheduling engine is also available as a JavaScript SDK installable via NPM or a CDN script tag. See [JavaScript SDK](/api/sdk) for installation and usage examples.

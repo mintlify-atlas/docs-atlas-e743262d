@@ -1,0 +1,140 @@
+---
+title: "Reports & Exports"
+description: "Generate CSV exports, printable sign-in sheets, individual volunteer schedule PDFs, and iCal calendar files directly from the event dashboard."
+---
+
+The Reports page consolidates every export and printable document for an event in one place. Navigate to it from the event dashboard by clicking **Quick Export**, or go directly to `/events/[id]/reports`.
+
+The page is split into two tabs: **Overview & Exports** and **Volunteer Stats & PDFs**.
+
+## Navigating to reports
+
+<Steps>
+  <Step title="Open the event dashboard">
+    Go to **Events** and select your event to open its dashboard.
+  </Step>
+  <Step title="Click Quick Export">
+    In the module cards at the bottom of the dashboard, click the **Quick Export** card. You can also navigate directly to `/events/[id]/reports`.
+  </Step>
+  <Step title="Choose a report">
+    Select the report type from the **Overview & Exports** tab or switch to **Volunteer Stats & PDFs** for per-volunteer exports.
+  </Step>
+</Steps>
+
+## Available exports
+
+### Overview & Exports tab
+
+<CardGroup cols={2}>
+  <Card title="Master Schedule" icon="file-spreadsheet">
+    A CSV file containing every assignment for the event. Each row includes shift name, start time, end time, volunteer name, group, and attendance status (Present / Absent / Scheduled). Unfilled slots appear as a row with "UNFILLED" in the volunteer column.
+
+    **Filename:** `{EventName}_master_schedule.csv`
+  </Card>
+  <Card title="Attendance & Hours" icon="clock">
+    A CSV summary of per-volunteer statistics: total hours worked (from checked-in shifts), shifts completed, and combined late/absent count.
+
+    **Filename:** `{EventName}_volunteer_stats.csv`
+  </Card>
+  <Card title="Sign-In Sheet" icon="printer">
+    A printable PDF listing every scheduled volunteer in chronological order by shift start time. Each row includes volunteer name, shift name, date, time window, and blank check-in and check-out boxes for manual use at the event.
+
+    **Filename:** `{EventName}_signin_sheet.pdf`
+  </Card>
+  <Card title="Calendar" icon="calendar">
+    An iCal (`.ics`) file containing all assigned shifts for the entire event. Import it into Apple Calendar, Google Calendar, or Outlook to distribute the full event schedule.
+
+    **Filename:** `{EventName}_schedule.ics`
+  </Card>
+</CardGroup>
+
+#### Bulk schedules PDF
+
+The **Download All Schedules (PDF)** button in the Bulk Actions section generates a single multi-page PDF with one page per volunteer. Each page shows the volunteer's name, group, and a table of their assigned shifts with date, shift name, time window, and duration.
+
+**Filename:** `{EventName}_all_schedules.pdf`
+
+<Tip>
+  Use the bulk PDF at the end of an event briefing or email it as a single attachment. Each volunteer's page is self-contained and can be printed individually.
+</Tip>
+
+### Volunteer Stats & PDFs tab
+
+This tab shows a searchable table of all volunteers with the following columns:
+
+| Column | Description |
+|---|---|
+| **Name / Group** | Volunteer name and group label. |
+| **Total Hours** | Hours accumulated from shifts the volunteer checked into. |
+| **Shifts** | Count of shifts the volunteer has completed (checked in). |
+| **Attendance** | "Perfect" if no late or absent records; otherwise shows the combined late/absent count. |
+| **Actions** | Per-row buttons to download a PDF schedule or an iCal file for that volunteer. |
+
+Use the search bar to filter by volunteer name or group name.
+
+#### Individual volunteer PDF
+
+Each volunteer's PDF schedule includes:
+
+- Event name and volunteer name as the header
+- Volunteer group
+- A table of assigned shifts sorted by date, with columns: Date, Shift Name, Time, Duration
+
+**Filename:** `{EventName}_{VolunteerName}_schedule.pdf`
+
+#### Individual volunteer iCal
+
+Exports a personal `.ics` file containing only the shifts assigned to that volunteer. Useful for sending each volunteer their own calendar file.
+
+**Filename:** `{EventName}_{VolunteerName}_schedule.ics`
+
+## CSV column reference
+
+### Master Schedule CSV
+
+```
+Shift Name, Shift Start, Shift End, Volunteer Name, Group, Status
+```
+
+- `Status` is one of: `Present` (checked in), `Absent` (shift ended, not checked in), `Scheduled` (shift not yet started or in progress, not checked in)
+- Shifts with no assignments produce a single row with `UNFILLED` as the volunteer name
+
+### Attendance & Hours CSV
+
+```
+Name, Group, Total Hours, Shifts Completed, Late/Absent
+```
+
+- `Total Hours` is summed only from shifts where the volunteer checked in
+- `Late/Absent` is the count of past shifts where the volunteer did not check in
+
+## Sign-In Sheet columns
+
+The printed PDF sign-in sheet contains six columns:
+
+```
+Volunteer Name | Shift | Date | Time | Checked In [ ] | Checked Out [ ]
+```
+
+Rows are sorted chronologically by shift start time, then by shift name, then alphabetically by volunteer name within each shift.
+
+## Use cases
+
+<AccordionGroup>
+  <Accordion title="Event wrap-up and record-keeping">
+    After your event concludes, download the **Attendance & Hours CSV** for a complete record of volunteer participation. The Master Schedule CSV captures the full assignment list including who was absent, useful for post-event review or grant reporting.
+  </Accordion>
+  <Accordion title="Distributing schedules to volunteers">
+    Use the **Bulk Schedules PDF** to produce a single file where each volunteer's page can be printed and handed out, or send individual volunteers their personal **iCal** file so shifts appear directly in their calendar app.
+  </Accordion>
+  <Accordion title="On-site check-in without a device">
+    Print the **Sign-In Sheet PDF** as a paper fallback if Kiosk mode is unavailable. The sheet lists every scheduled volunteer in time order with blank check-in and check-out boxes for manual recording.
+  </Accordion>
+  <Accordion title="Sharing the full event schedule">
+    Download the **Calendar iCal** file to import all event shifts into a shared calendar. Import it into Google Calendar or Outlook and share the calendar with your team for centralized schedule visibility.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  All exports are generated client-side using the data loaded when the Reports page opened. If assignments have changed since you opened the page, refresh before downloading to ensure the export reflects the latest data.
+</Warning>

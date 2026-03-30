@@ -1,0 +1,158 @@
+---
+title: "JavaScript SDK"
+description: "Install and use the official JavaScript SDK to call the Scheduler API from your application."
+---
+
+The Scheduler API ships an official JavaScript SDK that wraps the HTTP API with a typed client. You can install it via NPM or load it from a CDN.
+
+## Installation
+
+<Tabs>
+  <Tab title="NPM">
+    Install the package directly from GitHub until it is published to the NPM registry:
+
+    ```bash
+    npm install github:greenmartialarts/shift-scheduler-api#path:packages/scheduler-sdk
+    ```
+  </Tab>
+  <Tab title="CDN">
+    Load the SDK from the API service's static assets:
+
+    ```html
+    <script src="https://shift-scheduler-api-3nxm.vercel.app/static/scripts/scheduler-sdk.js"></script>
+    ```
+  </Tab>
+</Tabs>
+
+## Basic usage
+
+After installation, import the SDK and create a client instance with your API key:
+
+```javascript
+import SchedulerAPI from '@greenmartialarts/scheduler-sdk';
+
+const scheduler = new SchedulerAPI("your_api_key");
+```
+
+Pass your volunteers and shifts to the scheduling engine:
+
+```javascript
+import SchedulerAPI from '@greenmartialarts/scheduler-sdk';
+
+const scheduler = new SchedulerAPI("your_api_key");
+
+const result = await scheduler.schedule({
+  volunteers: [
+    { id: "v1", name: "Alice", group: "Adults", max_hours: 12 },
+    { id: "v2", name: "Delegate 1", group: "Delegates", max_hours: 10 }
+  ],
+  unassigned_shifts: [
+    {
+      id: "s1",
+      start: "2026-05-01T09:00:00Z",
+      end: "2026-05-01T17:00:00Z",
+      required_groups: { "Delegates": 2, "Adults": 2 }
+    }
+  ],
+  current_assignments: []
+});
+
+console.log(result.assigned_shifts);
+console.log("Fairness score:", result.fairness_score);
+```
+
+If using the CDN version, the `SchedulerAPI` class is available on the global `window` object — no import statement is needed.
+
+## Examples in other languages
+
+<CodeGroup>
+
+```python Python
+import requests
+
+API_URL = "https://shift-scheduler-api-3nxm.vercel.app/api/schedule"
+API_KEY = "your_api_key"
+
+def get_schedule(data):
+    headers = {"Authorization": f"Bearer {API_KEY}"}
+    response = requests.post(API_URL, json=data, headers=headers)
+    return response.json()
+
+result = get_schedule({
+    "volunteers": [
+        {"id": "v1", "name": "Alice", "group": "Adults", "max_hours": 12}
+    ],
+    "unassigned_shifts": [
+        {
+            "id": "s1",
+            "start": "2026-05-01T09:00:00Z",
+            "end": "2026-05-01T17:00:00Z",
+            "required_groups": {"Adults": 1}
+        }
+    ]
+})
+
+print(result["fairness_score"])
+```
+
+```bash cURL
+curl -X POST https://shift-scheduler-api-3nxm.vercel.app/api/schedule \
+     -H "Authorization: Bearer YOUR_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "volunteers": [
+         {"id": "v1", "name": "Alice", "group": "Adults", "max_hours": 12}
+       ],
+       "unassigned_shifts": [
+         {
+           "id": "s1",
+           "start": "2026-05-01T09:00:00Z",
+           "end": "2026-05-01T17:00:00Z",
+           "required_groups": {"Adults": 1}
+         }
+       ]
+     }'
+```
+
+</CodeGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="401 Unauthorized">
+    Your HMAC signature is invalid or the key has been revoked.
+
+    - Verify you are passing the full `[user_id].[signature]` key — both parts are required.
+    - Do not modify or truncate the signature portion.
+    - If you migrated from v1.0 (Python), your old key will not work. [Request a new v2.1 key](/api/authentication#requesting-an-api-key).
+  </Accordion>
+  <Accordion title="400 Bad Request">
+    Your request payload has a structural or type error.
+
+    Use [`POST /api/validate`](/api/endpoints#post-apivalidate) to get field-level error messages without running the scheduler:
+
+    ```bash
+    curl -X POST https://shift-scheduler-api-3nxm.vercel.app/api/validate \
+         -H "Authorization: Bearer YOUR_KEY" \
+         -H "Content-Type: application/json" \
+         -d '{ ... your payload ... }'
+    ```
+
+    Common causes:
+    - `start` or `end` not in ISO 8601 format (e.g., missing the `Z` timezone suffix)
+    - `required_groups` passed as a string instead of an object
+    - `max_hours` passed as `null` — use `999` for unlimited
+  </Accordion>
+  <Accordion title="Rate limit exceeded">
+    You have exceeded your daily request quota.
+
+    Check your current usage with [`GET /api/usage`](/api/endpoints#get-apiusage):
+
+    ```bash
+    curl https://shift-scheduler-api-3nxm.vercel.app/api/usage \
+         -H "Authorization: Bearer YOUR_KEY"
+    ```
+
+    To request a quota increase, email [arnav.shah.2k10@gmail.com](mailto:arnav.shah.2k10@gmail.com).
+  </Accordion>
+</AccordionGroup>

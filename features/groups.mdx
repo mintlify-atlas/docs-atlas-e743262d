@@ -1,0 +1,141 @@
+---
+title: "Volunteer groups"
+description: "Groups categorize volunteers by role — Medical, Security, General Volunteers, and so on. Shift requirements reference groups by name to specify how many of each role a shift needs."
+---
+
+A volunteer group is a named role category scoped to a specific event. Groups connect volunteers to shifts: each volunteer belongs to a group, and each shift declares how many volunteers it needs from each group via the `required_groups` field.
+
+## What groups are used for
+
+- **Shift requirements** — the `required_groups` JSON on a shift (e.g. `{"Medical": 2, "Security": 1}`) references group names directly. The auto-assign engine reads this to match the right volunteers.
+- **Volunteer classification** — every volunteer has a `group` field that determines which shifts they are eligible for.
+- **Analytics** — the dashboard's "Volunteers by group" pie chart breaks down your roster by group.
+- **Kiosk filtering** — the kiosk can surface shifts relevant to a volunteer's group during check-in.
+
+## Creating a group
+
+<Steps>
+  <Step title="Open Volunteer Groups">
+    From the event Command Center, navigate to **Volunteers → Manage Groups**, or go directly to `/events/[id]/groups`.
+  </Step>
+  <Step title="Click Add Group">
+    Click the **Add Group** button in the top-right corner of the page. A form panel expands.
+  </Step>
+  <Step title="Fill in the group details">
+    Complete the following fields:
+
+    | Field | Required | Description |
+    |-------|----------|-------------|
+    | **Name** | Yes | The role label. Must be unique within the event. |
+    | **Color** | No | A hex color used for the group's visual badge and left border. |
+    | **Description** | No | A short note about the role's responsibilities. |
+    | **Default max hours** | No | A cap on how many hours a volunteer in this group can be assigned per event. Accepts values in 0.5-hour increments. |
+  </Step>
+  <Step title="Save">
+    Click **Save Group**. The group card appears in the grid with a colored left border.
+  </Step>
+</Steps>
+
+## Color coding
+
+Every group has an optional hex color. If you do not set one, the system defaults to blue (`#3b82f6`). Colors appear as:
+
+- A left border on the group card in the Groups page.
+- A colored indicator next to the group name in volunteer lists and shift views.
+
+The color picker in the group form accepts both the native color input and a direct hex value input, so you can paste an exact brand color.
+
+The available preset colors the system auto-assigns to discovered groups include:
+
+```
+#ef4444  red
+#f97316  orange
+#f59e0b  amber
+#84cc16  lime
+#10b981  emerald
+#06b6d4  cyan
+#3b82f6  blue
+#8b5cf6  violet
+#d946ef  fuchsia
+#f43f5e  rose
+```
+
+## Editing and deleting groups
+
+Click **Edit** on a group card to re-open the form with the existing values pre-filled. Update any field and click **Update Group** to save.
+
+Click **Delete** to remove a group. Deletion will fail if volunteers are currently assigned to that group.
+
+<Warning>
+  Deleting a group does not automatically unassign its volunteers. Reassign or remove those volunteers first, or the delete will be rejected.
+</Warning>
+
+## Discovered groups
+
+When volunteers are imported via CSV with a `group` field that does not match any explicitly created group, Shift Scheduler surfaces these as **Discovered Groups** at the bottom of the Groups page. Discovered groups are auto-colored using a deterministic hash of the group name.
+
+Click **Customize** on a discovered group card to promote it to a full group with a description, custom color, and default max hours.
+
+<Info>
+  Discovered groups function normally for shift matching — they are not second-class. Customizing them is optional but recommended for color control and adding a description.
+</Info>
+
+## How groups connect to shifts
+
+When you create or edit a shift, the `required_groups` field maps group names to headcounts:
+
+```json
+{
+  "Medical": 2,
+  "Security": 1,
+  "General Volunteers": 4
+}
+```
+
+The group names here must match the names of groups in your event exactly (case-sensitive). If a group name in `required_groups` does not match any volunteer's group, those slots remain unfillable by auto-assign.
+
+You can also restrict or block groups using `allowed_groups` and `excluded_groups` on a shift. See [Shifts](/features/shifts) for full details.
+
+## How groups connect to volunteers
+
+Each volunteer record has a `group` text field. When you add or edit a volunteer, you select their group from the groups defined for that event. Volunteers can only belong to one group per event.
+
+The volunteer's group determines:
+
+- Which shifts they count toward in `required_groups`
+- Whether they pass `allowed_groups` or `excluded_groups` filters on a shift
+- Which chart segment they appear in on the dashboard analytics
+
+## Best practices
+
+<AccordionGroup>
+  <Accordion title="Use consistent, unambiguous names">
+    Group names appear verbatim in shift requirements JSON, CSV exports, and auto-assign logic. Avoid spaces at the start or end, and pick one canonical casing — `Medical` or `medical`, not both.
+  </Accordion>
+  <Accordion title="Keep groups broad, not role-specific">
+    A group like `Medical` is more reusable across shifts than `Paramedic – Zone A`. Use the shift name to convey specific placement. Groups express capability categories, not individual positions.
+  </Accordion>
+  <Accordion title="Create groups before importing volunteers">
+    If you import volunteers via CSV with group names, those names will appear as Discovered Groups if they were not created first. Explicitly creating groups beforehand lets you assign colors and descriptions ahead of the import.
+  </Accordion>
+  <Accordion title="Set default max hours at the group level">
+    The `max_hours_default` on a group acts as a sensible baseline. You can still override max hours on individual volunteers, but a group-level default reduces manual work when adding many volunteers of the same type.
+  </Accordion>
+</AccordionGroup>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Shifts" icon="calendar" href="/features/shifts">
+    Reference groups in required_groups, allowed_groups, and excluded_groups.
+  </Card>
+  <Card title="Volunteers" icon="users" href="/features/volunteers">
+    Assign each volunteer to a group when creating or editing their profile.
+  </Card>
+  <Card title="Bulk import" icon="upload" href="/features/bulk-import">
+    Import volunteers with group assignments from a CSV file.
+  </Card>
+  <Card title="Dashboard" icon="chart-bar" href="/features/dashboard">
+    See volunteer distribution by group in the analytics bar chart.
+  </Card>
+</CardGroup>

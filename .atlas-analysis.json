@@ -1,0 +1,73 @@
+{
+  "projectType": "saas",
+  "projectName": "Shift Scheduler",
+  "projectDescription": "A full-stack web application for managing event volunteers, shift scheduling, check-ins, and asset tracking — built with Next.js and Supabase.",
+  "theme": "luma",
+  "primaryColor": "#2563EB",
+  "lightColor": "#EFF6FF",
+  "darkColor": "#1E3A8A",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Getting Started",
+        "groups": [
+          {
+            "group": "Overview",
+            "pages": ["introduction", "quickstart"]
+          },
+          {
+            "group": "Setup",
+            "pages": ["setup/installation", "setup/database", "setup/environment"]
+          }
+        ]
+      },
+      {
+        "tab": "Features",
+        "groups": [
+          {
+            "group": "Event Management",
+            "pages": ["features/events", "features/shifts", "features/groups"]
+          },
+          {
+            "group": "Volunteers",
+            "pages": ["features/volunteers", "features/assignments", "features/bulk-import"]
+          },
+          {
+            "group": "On-Site Operations",
+            "pages": ["features/kiosk", "features/checkin", "features/assets"]
+          },
+          {
+            "group": "Reporting & Analytics",
+            "pages": ["features/dashboard", "features/reports"]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Scheduler API",
+            "pages": ["api/overview", "api/authentication", "api/endpoints", "api/sdk"]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Event and shift management with templates, recurring shifts, and clone support",
+    "Volunteer database with group-based organization and CSV bulk import",
+    "Auto-assign scheduling powered by a high-performance Go API with fairness scoring",
+    "Tablet-friendly Kiosk mode for self-service volunteer check-in/check-out",
+    "Asset tracking for equipment (radios, vests, keys) during events",
+    "Real-time dashboard with fill rate analytics and live check-in feed",
+    "PDF and CSV report export for schedules, sign-in sheets, and attendance records",
+    "Role-based access control with Supabase authentication and Row Level Security"
+  ],
+  "publicApiSurface": [
+    "POST /api/schedule — Run auto-assignment on volunteers and shifts (JSON)",
+    "POST /api/schedule/csv — Run auto-assignment via CSV upload",
+    "POST /api/validate — Validate request payload without scheduling",
+    "GET /api/usage — Retrieve current quota and usage history",
+    "Authorization: Bearer [user_id].[signature] — HMAC-signed API key auth"
+  ]
+}

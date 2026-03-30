@@ -1,97 +1,61 @@
 ---
-title: "Introduction"
-description: "Welcome to the new home for your documentation"
+title: "Shift Scheduler"
+description: "Manage event volunteers, shifts, and check-ins — from scheduling to on-site coordination."
 ---
 
-## Setting up
+Shift Scheduler is a full-stack web application that replaces manual spreadsheets for event staffing. It handles everything from building a shift schedule and assigning volunteers to running a tablet check-in station on event day.
 
-Get your documentation site up and running in minutes.
-
-<Card
-  title="Start here"
-  icon="rocket"
-  href="/quickstart"
-  horizontal
->
-  Follow our three step quickstart guide.
-</Card>
-
-## Make it yours
-
-Design a docs site that looks great and empowers your users.
-
-<Columns cols={2}>
-  <Card
-    title="Edit locally"
-    icon="pen-to-square"
-    href="/development"
-  >
-    Edit your docs locally and preview them in real time.
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Create your first event and assign volunteers in minutes.
   </Card>
-  <Card
-    title="Customize your site"
-    icon="palette"
-    href="/essentials/settings"
-  >
-    Customize the design and colors of your site to match your brand.
+  <Card title="Kiosk Mode" icon="tablet-screen-button" href="/features/kiosk">
+    Set up a self-service check-in station for on-site use.
   </Card>
-    <Card
-    title="Set up navigation"
-    icon="map"
-    href="/essentials/navigation"
-  >
-    Organize your docs to help users find what they need and succeed with your product.
+  <Card title="Auto-Assign" icon="wand-magic-sparkles" href="/features/assignments">
+    Automatically fill open shifts using the scheduling engine.
   </Card>
-  <Card
-    title="API documentation"
-    icon="terminal"
-    href="/api-reference/introduction"
-  >
-    Auto-generate API documentation from OpenAPI specifications.
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Integrate the scheduling engine into your own application.
   </Card>
-</Columns>
+</CardGroup>
 
-## Create beautiful pages
+## What you can do
 
-Everything you need to create world-class documentation.
+<CardGroup cols={2}>
+  <Card title="Events & Shifts" icon="calendar-days" href="/features/events">
+    Create events, define shifts with time windows and group requirements, and use templates for recurring schedules.
+  </Card>
+  <Card title="Volunteer Management" icon="users" href="/features/volunteers">
+    Build a volunteer database with group affiliations, max hours, and contact info. Import from CSV.
+  </Card>
+  <Card title="Assignments" icon="list-check" href="/features/assignments">
+    Manually assign volunteers or use Auto-Assign to fill slots based on availability and group rules.
+  </Card>
+  <Card title="Asset Tracking" icon="box-archive" href="/features/assets">
+    Manage a pool of equipment (radios, vests, keys) and track assignment and return during check-in.
+  </Card>
+  <Card title="Check-In" icon="clipboard-check" href="/features/checkin">
+    Mark attendance from any device. Flag late arrivals and track who is currently on-site.
+  </Card>
+  <Card title="Reports" icon="chart-bar" href="/features/reports">
+    Export schedules, sign-in sheets, and attendance records to CSV or PDF.
+  </Card>
+</CardGroup>
 
-<Columns cols={2}>
-  <Card
-    title="Write with MDX"
-    icon="pen-fancy"
-    href="/essentials/markdown"
-  >
-    Use MDX to style your docs pages.
-  </Card>
-  <Card
-    title="Code samples"
-    icon="code"
-    href="/essentials/code"
-  >
-    Add sample code to demonstrate how to use your product.
-  </Card>
-  <Card
-    title="Images"
-    icon="image"
-    href="/essentials/images"
-  >
-    Display images and other media.
-  </Card>
-  <Card
-    title="Reusable snippets"
-    icon="recycle"
-    href="/essentials/reusable-snippets"
-  >
-    Write once and reuse across your docs.
-  </Card>
-</Columns>
+## Get set up
 
-## Need inspiration?
-
-<Card
-  title="See complete examples"
-  icon="stars"
-  href="https://mintlify.com/customers"
->
-  Browse our showcase of exceptional documentation sites.
-</Card>
+<Steps>
+  <Step title="Create an account">
+    Sign up at [Shift Scheduler](https://shift-scheduler-api-3nxm.vercel.app/) and log in to your dashboard.
+  </Step>
+  <Step title="Create an event">
+    From the **Events** list, create a new event and add the date and name.
+  </Step>
+  <Step title="Add volunteers and shifts">
+    Import volunteers from CSV or add them manually. Create shifts with the required groups and time windows.
+  </Step>
+  <Step title="Assign and go live">
+    Use **Auto-Assign** to fill shifts automatically, then launch **Kiosk Mode** on a tablet for on-site check-ins.
+  </Step>
+</Steps>

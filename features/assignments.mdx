@@ -1,0 +1,153 @@
+---
+title: Assignments
+description: Link volunteers to shift slots manually or with the Auto-Assign engine, swap assignments, and detect scheduling conflicts in real time.
+---
+
+An assignment is a record that links one volunteer to one shift slot. The Assignments page shows every shift for an event, the volunteers currently filling each slot, and any scheduling conflicts or understaffing warnings.
+
+## Manual assignment
+
+<Steps>
+  <Step title="Open the Assignments page">
+    Navigate to your event and click **Assignments** in the sidebar.
+  </Step>
+  <Step title="Find the shift">
+    Use the search bar to filter by shift name, date/time, or assigned volunteer name. Shifts with conflicts or unfilled slots are automatically sorted to the top.
+  </Step>
+  <Step title="Select a volunteer">
+    In the shift card, open the **+ Add Volunteer** dropdown and select a name. The volunteer is assigned immediately and the card updates without a page reload.
+  </Step>
+  <Step title="Fill from a group (optional)">
+    Use the **Fill from group** dropdown beside each shift to automatically assign available volunteers from a specific group up to the shift's required headcount. Only volunteers without a time conflict are added.
+  </Step>
+</Steps>
+
+<Note>
+  The app prevents assigning the same volunteer to the same shift twice. If you attempt a duplicate, an error message is shown and no record is created.
+</Note>
+
+## Swapping assignments
+
+To swap two assigned volunteers between shifts:
+
+1. Click **Swap** next to the first volunteer. Their row is highlighted in blue.
+2. Click **Swap** next to the second volunteer in any shift. The two volunteers exchange positions.
+
+The swap is rejected if either volunteer's group does not meet the group requirements of the target shift.
+
+## Removing assignments
+
+- To remove a single volunteer from a shift, click **Remove** next to their name.
+- To remove all volunteers from one shift, click **Unfill shift** in the shift card header.
+- To clear all assignments across every shift in the event, click **Clear All** in the page toolbar.
+
+All destructive actions require confirmation before executing.
+
+## Auto-Assign
+
+Auto-Assign sends your event's full volunteer and shift data to the external **Go Scheduler API**, which returns an optimized assignment plan in milliseconds.
+
+### How it works
+
+Click the **Auto Assign** button. The app:
+
+1. Fetches all volunteers and shifts for the event from Supabase.
+2. Builds a JSON payload and sends it to `POST /api/schedule`.
+3. Deletes all existing assignments for the event.
+4. Inserts the new assignments returned by the API.
+
+### Request payload
+
+```json
+{
+  "volunteers": [
+    { "id": "vol_1", "name": "Alice", "group": "Delegates", "max_hours": 10 },
+    { "id": "vol_2", "name": "Bob",   "group": "Adults",    "max_hours": 12 }
+  ],
+  "unassigned_shifts": [
+    {
+      "id": "shift_101",
+      "start": "2025-12-01T08:00:00Z",
+      "end":   "2025-12-01T10:00:00Z",
+      "required_groups": { "Delegates": 2, "Adults": 2 }
+    }
+  ],
+  "current_assignments": []
+}
+```
+
+Volunteers without a `max_hours` value are sent with `max_hours: 999`, which the API treats as unlimited.
+
+### API response
+
+```json
+{
+  "assigned_shifts": {
+    "shift_101": ["vol_1", "vol_2"]
+  },
+  "unfilled_shifts": ["shift_103"],
+  "fairness_score": 0.12,
+  "conflicts": [
+    {
+      "shift_id": "shift_103",
+      "group": "Delegates",
+      "reasons": ["Volunteer vol_1 already reached max_hours (10.0)"]
+    }
+  ]
+}
+```
+
+| Response field    | Description |
+| :---------------- | :---------- |
+| `assigned_shifts` | Map of `shift_id` → `[volunteer_ids]` for all filled slots. |
+| `unfilled_shifts` | List of shift IDs that could not be fully staffed. |
+| `fairness_score`  | Workload distribution score (see below). |
+| `conflicts`       | Reasons why specific shifts could not be filled. |
+
+### Fairness score
+
+After Auto-Assign completes, a **Schedule Fairness** panel appears at the top of the Assignments page showing the `fairness_score` returned by the API.
+
+The fairness score is a variance-based metric where **lower is better** — a score near `0` means every volunteer has been assigned roughly equal hours, while a higher score indicates an uneven workload distribution. The UI renders the raw score as an equivalent percentage (0–100%) for readability:
+
+| Score range | Rating |
+| :---------- | :----- |
+| > 90%       | Excellent — workload is perfectly balanced. |
+| 70–90%      | Good — minor variations. |
+| 50–70%      | Fair — some volunteers are working significantly more. |
+| < 50%       | Imbalanced — review assignments immediately. |
+
+### Conflict insights
+
+Any `conflicts` entries returned by the API are displayed in the **Global Scheduling Insights** panel alongside the fairness score. Similar reasons (e.g. multiple "max_hours" violations) are aggregated and de-duplicated into a compact list.
+
+## Viewing assignments by shift
+
+The Assignments page groups all assignments under their parent shift cards, sorted by:
+
+1. Shifts with scheduling conflicts (highest priority)
+2. Partially filled shifts
+3. Completely empty shifts
+4. Chronological order, then alphabetical by shift name
+
+Each shift card shows the shift time window, date, group requirements (with headcount badges), and the full list of assigned volunteers.
+
+## Conflict detection
+
+The page performs client-side conflict detection on every render:
+
+- **Double-booking**: if a volunteer appears in two shifts whose time windows overlap, both shift cards show a yellow warning with the volunteer's name and the word "Overlap".
+- **Max hours exceeded**: if a volunteer's cumulative assigned hours across all shifts exceeds their `max_hours`, all shifts they are assigned to show a warning with their name, actual hours, and limit.
+
+<Warning>
+  Auto-Assign clears all existing assignments before inserting new ones. If the API call fails partway through, some shifts may be left unassigned. Use **Clear All** and run Auto-Assign again to recover.
+</Warning>
+
+<CardGroup cols={2}>
+  <Card title="Volunteers" icon="users" href="/features/volunteers">
+    Manage volunteer profiles, groups, and max hours.
+  </Card>
+  <Card title="API overview" icon="code" href="/api/overview">
+    Technical details on the Go Scheduler API, authentication, and endpoints.
+  </Card>
+</CardGroup>

@@ -1,0 +1,88 @@
+---
+title: "Authentication"
+description: "Authenticate your API requests using HMAC-signed API keys passed as Bearer tokens."
+---
+
+All requests to the Scheduler API must include an API key in the `Authorization` header. The API uses stateless HMAC-signed keys — no session tokens or cookies are involved.
+
+## API key format
+
+Keys follow a two-part format:
+
+```
+[user_id].[signature]
+```
+
+For example:
+
+```http
+Authorization: Bearer arnav.sk_7a9b...2f1c
+```
+
+The `user_id` identifies your account. The `signature` is an HMAC hash that the API verifies on every request. Both parts are required — passing only a user ID will result in a `401` error.
+
+## Passing your key
+
+Include the key in the `Authorization` header of every request:
+
+```http
+Authorization: Bearer YOUR_KEY
+```
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://shift-scheduler-api-3nxm.vercel.app/api/schedule \
+     -H "Authorization: Bearer YOUR_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{ ... }'
+```
+
+```python Python
+import requests
+
+headers = {"Authorization": "Bearer YOUR_KEY"}
+response = requests.post(
+    "https://shift-scheduler-api-3nxm.vercel.app/api/schedule",
+    json=payload,
+    headers=headers
+)
+```
+
+```javascript JavaScript
+const scheduler = new SchedulerAPI("YOUR_KEY");
+```
+
+</CodeGroup>
+
+## Requesting an API key
+
+API keys are issued on request. Email the following address with your name and a brief description of your use case:
+
+**[arnav.shah.2k10@gmail.com](mailto:arnav.shah.2k10@gmail.com)**
+
+You will receive your `[user_id].[signature]` key by email.
+
+<Warning>
+  Version 2.0+ uses a stateless HMAC authentication strategy. Legacy API keys from v1.0 (Python) are not compatible and will be rejected with a `401` error. Request a new key if you are migrating from v1.0.
+</Warning>
+
+## Error responses
+
+| Status | Meaning |
+| :----- | :------ |
+| `401 Unauthorized` | The HMAC signature is invalid, the key is malformed, or the key has been revoked. |
+
+If you receive a `401`, verify that:
+- You are passing the full `[user_id].[signature]` key, not just one part.
+- You have not trimmed or modified the signature.
+- Your key has not been revoked (contact [arnav.shah.2k10@gmail.com](mailto:arnav.shah.2k10@gmail.com) to reissue).
+
+## Rate limiting
+
+Each API key has a daily quota. To check your current usage and remaining quota, call [`GET /api/usage`](/api/endpoints#get-apiusage).
+
+```bash
+curl https://shift-scheduler-api-3nxm.vercel.app/api/usage \
+     -H "Authorization: Bearer YOUR_KEY"
+```

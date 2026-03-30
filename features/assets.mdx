@@ -1,0 +1,119 @@
+---
+title: "Asset management"
+description: "Track physical equipment like radios, vests, and keys — from inventory setup through assignment and return."
+---
+
+Assets are the physical items you need to distribute to volunteers at your event: two-way radios, safety vests, access keys, tablets, and any other equipment. The asset system lets you build a per-event inventory, track which volunteer has each item, and confirm returns when shifts end.
+
+Navigate to the asset inventory from the event sidebar: **Event → Assets**.
+
+## Asset statuses
+
+Every asset has a `status` field that reflects its current state.
+
+<CardGroup cols={2}>
+  <Card title="Available" icon="circle-check">
+    The asset is in inventory and ready to be assigned. Only assets in this status appear on the Kiosk equipment selection screen.
+  </Card>
+  <Card title="Assigned" icon="clock">
+    The asset is currently checked out to a volunteer. It was assigned during a Kiosk check-in and has not been returned yet.
+  </Card>
+  <Card title="Maintenance" icon="triangle-exclamation">
+    The asset is temporarily out of service. It will not appear for assignment until its status is updated.
+  </Card>
+  <Card title="Lost" icon="circle-xmark">
+    The asset has been marked lost. It is excluded from available inventory and flagged for follow-up.
+  </Card>
+</CardGroup>
+
+## Adding assets to inventory
+
+<Steps>
+  <Step title="Open the Assets page">
+    Go to your event and select **Assets** from the sidebar. Click **Add Asset** in the top-right corner.
+  </Step>
+  <Step title="Fill in the asset details">
+    A form expands at the top of the page with four fields:
+
+    | Field | Description | Example |
+    |---|---|---|
+    | **Display Name** | A human-readable label for the asset | `Motorola CP200` |
+    | **Equipment Category** | The type of asset. Choose from Radio, Vest, Key, Tablet, or Other. | `Radio` |
+    | **Internal Identifier** | An optional serial number, label, or code used to tell identical assets apart. | `RAD-001` |
+    | **Operational Status** | The initial status. Defaults to `available`. | `available` |
+  </Step>
+  <Step title="Save the record">
+    Click **Confirm Registration**. The asset appears immediately in the inventory table, sorted by category then name.
+  </Step>
+</Steps>
+
+## Editing and deleting assets
+
+Hover over any row in the inventory table to reveal the **Edit** and **Delete** action buttons on the right.
+
+- **Edit** opens the form pre-filled with the asset's current values. Change any field and click **Sync Updates**.
+- **Delete** shows a confirmation prompt. Deletion is permanent and cascades to any associated `asset_assignment` records.
+
+<Warning>
+  Deleting an asset removes all historical assignment records for that item. If you need to retire an asset without losing history, set its status to `lost` or `maintenance` instead.
+</Warning>
+
+## Asset assignment during check-in
+
+Assets are assigned to volunteers through the [Kiosk](/features/kiosk) check-in flow. When a volunteer checks in, the Kiosk displays a grid of all assets with `status = available`. The volunteer taps to select the items they are taking.
+
+On confirmation:
+
+1. A row is added to the `asset_assignments` table with `checked_out_at` = current time.
+2. The asset's `status` changes to `assigned` and its `volunteer_id` is set to the volunteer.
+3. The activity log records an `asset_out` event.
+
+The asset immediately disappears from the available pool on the Kiosk, preventing double-assignment.
+
+## Tracking returns during check-out
+
+When a volunteer checks out via Kiosk, the **Verify Return** screen lists every asset currently assigned to them. Confirming check-out marks all listed assets as returned:
+
+1. `checked_in_at` is set on each `asset_assignment` row.
+2. The asset `status` resets to `available` and `volunteer_id` is cleared.
+3. The activity log records an `asset_in` event.
+
+For volunteers switching between back-to-back shifts, the Kiosk's [smart transition](/features/kiosk#smart-shift-transitions) prompt lets them carry their equipment over rather than return and re-issue it.
+
+## Viewing the inventory
+
+The inventory table shows all assets for the event with their name, category, identifier, and current status. Use the search field to filter by any of those fields.
+
+To see which assets are currently out in the field, filter or sort by status. Assets with `assigned` status are checked out; the volunteer holding them is recorded in `asset_assignments` but is not displayed in this table view.
+
+<Tip>
+  Before an event ends, check the inventory table for assets still in `assigned` status. Cross-reference the open `asset_assignments` rows to identify which volunteers have not yet returned their equipment.
+</Tip>
+
+## Data model
+
+The asset system uses two tables.
+
+```sql
+-- One row per physical item in the event's inventory
+assets (
+  id          uuid primary key,
+  event_id    uuid references events,
+  name        text,             -- e.g. "Motorola CP200"
+  type        text,             -- "Radio" | "Vest" | "Key" | "Tablet" | "Other"
+  identifier  text,             -- e.g. "RAD-001"
+  status      text              -- "available" | "assigned" | "maintenance" | "lost"
+)
+
+-- One row per check-out/check-in transaction
+asset_assignments (
+  id             uuid primary key,
+  asset_id       uuid references assets,
+  volunteer_id   uuid references volunteers,
+  checked_out_at timestamptz,   -- when the asset was issued
+  checked_in_at  timestamptz,   -- null while still checked out
+  notes          text
+)
+```
+
+A null `checked_in_at` means the asset is still in the volunteer's possession. When `checked_in_at` is set, the transaction is closed and the asset is returned to `available`.

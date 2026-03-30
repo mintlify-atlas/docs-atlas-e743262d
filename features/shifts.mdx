@@ -1,0 +1,172 @@
+---
+title: "Shifts"
+description: "Shifts define the time windows that need to be staffed. Each shift specifies when it runs, how many volunteers are required per group, and which groups are permitted or excluded."
+---
+
+A shift is a named time window within an event that needs to be filled with volunteers. Shifts carry group-based staffing requirements that the auto-assign engine uses to match the right people to the right roles.
+
+## Shift fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `name` | string | A human-readable label such as `Gate A – Morning` or `Medical Standby`. |
+| `start_time` | timestamp | Start of the shift window (stored as UTC, displayed in the event timezone). |
+| `end_time` | timestamp | End of the shift window. |
+| `required_groups` | JSON object | Maps group names to required headcount. See example below. |
+| `allowed_groups` | string array | If set, only volunteers in these groups may be assigned. |
+| `excluded_groups` | string array | Volunteers in these groups cannot be assigned to this shift. |
+
+### required_groups format
+
+```json
+{
+  "Medical": 2,
+  "Security": 1,
+  "General Volunteers": 4
+}
+```
+
+This tells the scheduler to fill exactly 2 Medical, 1 Security, and 4 General Volunteer slots on this shift. The auto-assign engine respects these counts when distributing volunteers.
+
+<Note>
+  `allowed_groups` and `excluded_groups` act as filters on top of `required_groups`. An empty array means no restriction is applied.
+</Note>
+
+## Creating shifts manually
+
+<Steps>
+  <Step title="Open the Shifts page">
+    From the event Command Center, click **Shifts**, or navigate to `/events/[id]/shifts`.
+  </Step>
+  <Step title="Click Add Shift">
+    Click the blue **Add Shift** button in the top-right area. A form expands inline.
+  </Step>
+  <Step title="Fill in the fields">
+    Enter the shift name, start time, and end time. Optionally select a template to pre-fill group requirements.
+  </Step>
+  <Step title="Set group requirements">
+    Enter the `required_groups` JSON to specify how many volunteers per group are needed. You can also set `allowed_groups` or `excluded_groups` as comma-separated values.
+  </Step>
+  <Step title="Save">
+    Submit the form. The shift appears in the list sorted by start time.
+  </Step>
+</Steps>
+
+## Inline editing
+
+Click the edit icon on any shift row in the list to open the **Edit Shift** modal. You can update the name, times, and all group fields without leaving the page.
+
+## Shift templates
+
+Templates are reusable blueprints stored at the account level (not per-event). They capture a shift's duration and group requirements so you can create consistent shifts across multiple events.
+
+### Creating a template
+
+<Steps>
+  <Step title="Open Templates">
+    From the Shifts page, click **Manage Templates** in the top-right. This opens `/events/[id]/shifts/templates`.
+  </Step>
+  <Step title="Click Add Template">
+    Click **Add Template** and fill in the form.
+  </Step>
+  <Step title="Set template fields">
+    Provide a name, duration in hours, an optional description, and the `required_groups` JSON. You can also set `allowed_groups` as a JSON array.
+
+    ```json
+    {"Medical": 2, "Security": 1}
+    ```
+
+    ```json
+    ["Medical", "Security"]
+    ```
+  </Step>
+  <Step title="Save">
+    Click **Save Template**. The template is now available in the shift creation form for all your events.
+  </Step>
+</Steps>
+
+### Using a template
+
+When creating a new shift manually, select a saved template from the template picker in the shift form. The duration and group requirements are pre-filled. You can override any field before saving.
+
+<Tip>
+  Templates are user-scoped, not event-scoped. A template you create for one event is available when building shifts for all your other events.
+</Tip>
+
+## Recurring shifts
+
+Recurring shifts let you generate a batch of identical shifts that repeat on a schedule — useful for multi-day events where the same staffing pattern repeats each day.
+
+<Steps>
+  <Step title="Click Recurring">
+    On the Shifts page, click the **Recurring** button. The recurring shift form expands.
+  </Step>
+  <Step title="Configure the pattern">
+    Choose a base shift (or select a template) and set the recurrence parameters — start date, end date, and the repeat frequency (daily, weekly, etc.).
+  </Step>
+  <Step title="Generate shifts">
+    Submit the form. The system calls `generateRecurringShifts` which creates one shift per recurrence instance. All generated shifts appear immediately in the list.
+  </Step>
+</Steps>
+
+<Info>
+  Events themselves can also carry a `recurrence_rule` (`WEEKLY`, `BIWEEKLY`, or `MONTHLY`) used for the "generate next occurrence" flow when cloning events on a recurring basis.
+</Info>
+
+## Bulk import via CSV
+
+You can import many shifts at once by uploading a CSV file instead of creating them one by one.
+
+<Steps>
+  <Step title="Click Import">
+    On the Shifts page, click **Import** (the upload icon). A file upload modal appears.
+  </Step>
+  <Step title="Prepare your CSV">
+    Your CSV should include columns that map to shift fields. The expected format is:
+
+    ```csv
+    name,start_time,end_time,required_groups
+    Gate A Morning,2026-06-01T08:00:00Z,2026-06-01T12:00:00Z,"{""Security"": 1, ""General Volunteers"": 3}"
+    Medical Standby,2026-06-01T08:00:00Z,2026-06-01T16:00:00Z,"{""Medical"": 2}"
+    ```
+  </Step>
+  <Step title="Upload and confirm">
+    Drag your file into the upload zone or click to browse. The system parses the file and calls `bulkAddShifts`. All valid rows are inserted.
+  </Step>
+</Steps>
+
+<Warning>
+  Uploading a CSV does not replace existing shifts. New shifts are appended. Use **Delete All Shifts** (the trash icon in the toolbar) before importing if you want a clean slate.
+</Warning>
+
+## List view and timeline view
+
+The Shifts page offers two display modes, toggled with the buttons in the search bar:
+
+- **List view** — A tabular list of all shifts sorted by start time. Supports search by name. Each row has inline edit and delete actions.
+- **Timeline view** — A visual Gantt-style chart showing shifts plotted against a time axis, useful for spotting gaps and overlaps across a long event day.
+
+Switch between views at any time; your shift data is the same in both modes.
+
+## Deleting shifts
+
+To delete a single shift, click the delete icon on its row in the list view and confirm the prompt.
+
+To remove all shifts for an event at once, click the trash icon in the Shifts toolbar and confirm. This is permanent and cannot be undone.
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Volunteer groups" icon="tag" href="/features/groups">
+    Define the groups referenced in required_groups and allowed_groups.
+  </Card>
+  <Card title="Bulk import" icon="upload" href="/features/bulk-import">
+    Learn more about the CSV import format for volunteers and shifts.
+  </Card>
+  <Card title="Assignments" icon="list-check" href="/features/assignments">
+    Assign volunteers to shifts manually or with Auto-Assign.
+  </Card>
+  <Card title="Dashboard" icon="chart-bar" href="/features/dashboard">
+    Monitor fill rates and shift coverage in real time.
+  </Card>
+</CardGroup>

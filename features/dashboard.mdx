@@ -1,0 +1,108 @@
+---
+title: "Dashboard & Analytics"
+description: "Real-time visibility into your event's staffing status — fill rates, attendance, volunteer distribution, and quick access to every management module."
+---
+
+The event dashboard is the command center for each event. It loads at `/events/[id]` and gives you an at-a-glance view of your staffing health, recent activity, and links to every management module.
+
+## Primary metrics
+
+The top row of the dashboard shows four key numbers, recalculated on every page load.
+
+<CardGroup cols={2}>
+  <Card title="Fill Rate" icon="percent">
+    The percentage of shift slots that have been assigned. Calculated as `filledSlots / totalSlots * 100`. Displays green at 80%+, yellow at 50–79%, and red below 50%.
+  </Card>
+  <Card title="Volunteers" icon="users">
+    Total registered volunteers for the event, regardless of whether they have been assigned to any shift.
+  </Card>
+  <Card title="Hours Tracked" icon="clock">
+    Sum of the duration of every shift in the event, in hours. Represents projected total volunteer demand, not actual hours worked.
+  </Card>
+  <Card title="Active Personnel" icon="signal">
+    Volunteers currently checked in and not yet checked out. Updates in real time as check-ins happen in Kiosk mode. Click the card to open the Active Personnel view.
+  </Card>
+</CardGroup>
+
+<Note>
+  **Active Personnel** vs **Total Checked In**: Active Personnel (`checked_in = true` and `checked_out_at = null`) counts only volunteers currently on-site. Total Checked In counts everyone who has checked in during the event, including those who have already checked out.
+</Note>
+
+## Secondary metrics
+
+Below the primary row, three secondary stat cards provide supporting context.
+
+| Metric | Description |
+|---|---|
+| **Total Shifts** | Number of shifts created for the event. |
+| **Total Slots** | Sum of all required volunteer slots across every shift, derived from `required_groups` per shift. |
+| **Late Arrivals** | Assignments where the shift start time has passed but the volunteer has not checked in (`checked_in = false`). Highlighted in red when greater than zero. |
+
+## Charts
+
+The **Operational Intelligence** section renders two interactive charts powered by [Recharts](https://recharts.org/).
+
+### Volunteers by group
+
+A bar chart showing how many registered volunteers belong to each group (e.g., Medical, Security, General). Groups are sourced from the `group` field on each volunteer record. Volunteers with no group are counted under "Unassigned".
+
+### Shift fill status
+
+A chart showing filled vs. unfilled slot counts across all shifts. Two segments represent:
+
+```
+Filled   = number of assignments (filledSlotsCount)
+Unfilled = totalSlots - filledSlotsCount
+```
+
+## Live Feed
+
+The **Live Feed** widget in the module grid shows the three most recent check-ins for the event. Each entry displays the volunteer's name and an initials avatar. Click **View All** to open the full check-in log at `/events/[id]/checkin`.
+
+<Tip>
+  The Live Feed shows up to 3 entries, sorted by assignment ID as a proxy for recency. For a timestamped audit trail of all check-in and check-out activity, use the Check-In page or the activity log.
+</Tip>
+
+## Module cards
+
+The lower section of the dashboard provides quick navigation to every management module.
+
+<CardGroup cols={3}>
+  <Card title="Shifts" icon="calendar" href="/features/shifts">
+    Configure shift timelines, required volunteer groups, and slot counts.
+  </Card>
+  <Card title="Volunteers" icon="graduation-cap" href="/features/volunteers">
+    Manage volunteer profiles, group affiliations, and CSV import/export.
+  </Card>
+  <Card title="Assignments" icon="bolt" href="/features/assignments">
+    Manually assign volunteers or run Auto-Assign to fill slots automatically.
+  </Card>
+  <Card title="Assets" icon="box-archive" href="/features/assets">
+    Track vest and equipment inventory, including assignment status.
+  </Card>
+  <Card title="Quick Export" icon="file-bar-chart" href="/features/reports">
+    Generate CSV exports, PDF sign-in sheets, and individual volunteer schedules.
+  </Card>
+</CardGroup>
+
+## Launching Kiosk mode
+
+From the dashboard header, click **Launch Kiosk** to open the tablet-friendly check-in interface for on-site operations. Kiosk mode is optimized for self-service use on a shared tablet at the check-in desk.
+
+<Info>
+  Kiosk mode requires an authenticated session. If you are setting up a shared tablet, log in first and then launch Kiosk from the dashboard.
+</Info>
+
+## Broadcast Hub
+
+The **Broadcast** page (`/events/[id]/broadcast`) lets you send a bulk email announcement to volunteers. You can target all volunteers, only those currently checked in, or volunteers from a specific group.
+
+Each broadcast is sent via Gmail SMTP using up to three rotating send accounts (configured via `GMAIL_USER_1/2/3` environment variables). Recipients are added as BCC in batches of 25 to protect privacy and stay within Gmail's per-account limits.
+
+<Note>
+  The Broadcast Hub requires Gmail SMTP credentials to be configured in your environment. See [Environment Variables](/setup/environment) for setup instructions.
+</Note>
+
+## Cloning an event
+
+The **Clone Event** button in the dashboard header duplicates the current event along with its shift structure. Volunteer registrations and assignments are not copied. Use this to quickly scaffold a new event based on an existing template.

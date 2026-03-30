@@ -1,0 +1,134 @@
+---
+title: "Database Setup"
+description: "Apply the Supabase PostgreSQL migrations to set up the Shift Scheduler schema, Row Level Security policies, and supporting tables."
+---
+
+Shift Scheduler uses [Supabase](https://supabase.com) as its PostgreSQL database and authentication provider. All schema changes are managed through versioned SQL migration files in `supabase/migrations/`. You apply these manually in the Supabase SQL Editor.
+
+<Warning>
+  The `supabase/schema.sql` file is a legacy snapshot for reference only. Do not run it to set up a new project. Run the migrations in order instead.
+</Warning>
+
+## Running migrations
+
+Open your Supabase project, navigate to **SQL Editor**, and run each migration file in the order listed below. Paste the contents of each file and click **Run**.
+
+<Steps>
+
+  <Step title="Base schema (schema.sql)">
+    The base schema creates the four core tables (`events`, `volunteers`, `shifts`, `assignments`) along with their initial RLS policies. If you are setting up a fresh project, run `supabase/schema.sql` first to establish this foundation.
+
+    ```sql
+    -- Creates: events, volunteers, shifts, assignments
+    -- Enables RLS on all four tables
+    -- Adds per-user SELECT/INSERT/UPDATE/DELETE policies
+    ```
+  </Step>
+
+  <Step title="20251202000001 — Scheduler features">
+    Adds `shift_templates` and `volunteer_groups` tables. Introduces group-based shift requirements and migrates any existing `volunteers.group` text values into the new `volunteer_groups` table.
+
+    **File:** `supabase/migrations/20251202000001_add_scheduler_features.sql`
+
+    New tables:
+    - `shift_templates` — reusable shift definitions owned by a user.
+    - `volunteer_groups` — event-scoped groups with name, color, and default max hours.
+
+    Also adds `group_id` as a foreign key column on `volunteers`.
+  </Step>
+
+  <Step title="20251202000002 — Assets and kiosk">
+    Adds asset management and asset assignment tables used by the kiosk check-in flow.
+
+    **File:** `supabase/migrations/20251202000002_add_assets_and_kiosk.sql`
+
+    New tables:
+    - `assets` — inventory items (radios, vests, keys) scoped to an event, with a `status` field (`available`, `assigned`, `maintenance`, `lost`).
+    - `asset_assignments` — tracks which volunteer holds an asset, with `checked_out_at` and `checked_in_at` timestamps.
+  </Step>
+
+  <Step title="20251202000003 — Assignment checkout">
+    Adds a `checked_out_at` timestamp column to the `assignments` table to support tracking when a volunteer completes (checks out of) a shift.
+
+    **File:** `supabase/migrations/20251202000003_add_assignment_checkout.sql`
+  </Step>
+
+  <Step title="Multi-admin migrations (20240523 series)">
+    Adds collaborative event administration. Run these eight files in order:
+
+    | File | Purpose |
+    | :--- | :--- |
+    | `20240523000000_add_multi_admin.sql` | Creates `event_admins` and `event_invitations` tables; replaces user-scoped RLS with admin-scoped policies |
+    | `20240523000001_fix_rls_recursion.sql` | Fixes recursive RLS policy evaluation on `event_admins` |
+    | `20240523000002_fix_invite_rls.sql` | Corrects RLS on `event_invitations` |
+    | `20240523000003_fix_accept_flow.sql` | Fixes invitation acceptance flow |
+    | `20240523000004_fix_recursion_final.sql` | Further recursion fix |
+    | `20240523000005_fix_recursion_final_v2.sql` | Additional recursion fix iteration |
+    | `20240523000006_fix_recursion_invitations.sql` | Final recursion fix for invitations |
+    | `20240523000007_restrict_invite_access.sql` | Restricts invite visibility to admins and the invited user |
+
+    After this series, event data is accessible to any user listed in `event_admins` for that event, not just the original creator.
+  </Step>
+
+  <Step title="Remaining migrations">
+    Apply the following in order to add activity tracking, performance indexes, user profiles, tutorial state, contact submissions, and recurrence support:
+
+    | File | Adds |
+    | :--- | :--- |
+    | `20251202000000_add_name_to_shifts.sql` | `name` column on `shifts` |
+    | `20260114_add_activity_tracking.sql` | `activity_logs` table and `checked_in_at` on `assignments` |
+    | `20260115_add_performance_indexes.sql` | Query performance indexes |
+    | `20260115_add_profiles.sql` | `profiles` table + trigger to auto-create on signup |
+    | `20260121_add_tutorial_completion.sql` | `has_completed_tutorial` flag on profiles |
+    | `20260127_create_contact_submissions.sql` | `contact_submissions` table |
+    | `20260201000000_add_recurrence.sql` | Recurring shift support |
+    | `add_checkin_columns.sql` | Additional check-in columns |
+    | `20240523000008_get_admin_emails.sql` | Helper function for admin email lookup |
+  </Step>
+
+</Steps>
+
+## Core tables
+
+| Table | Description |
+| :--- | :--- |
+| `events` | Top-level record for each event. Owned by a `user_id`, with admins tracked in `event_admins`. |
+| `volunteer_groups` | Named roles within an event (e.g., "Security", "Medical"). Each group has a color and optional default max hours. |
+| `volunteers` | Individual volunteer records. Each belongs to an event and a group. |
+| `shifts` | Time slots within an event. Includes `required_groups` (a JSONB map of group → headcount) and `allowed_groups`/`excluded_groups` arrays. |
+| `assignments` | Links a volunteer to a shift. Includes `checked_in_at` and `checked_out_at` timestamps for attendance tracking. Unique on `(shift_id, volunteer_id)`. |
+| `assets` | Equipment items (radios, vests, keys) scoped to an event with a `status` field. |
+| `asset_assignments` | Tracks which volunteer holds an asset, with checkout and return timestamps. |
+| `activity_logs` | Audit trail of check-in, check-out, asset, and missed-shift events for an event. |
+| `profiles` | Per-user metadata, including tutorial completion state. Auto-created on signup via a Postgres trigger. |
+| `event_admins` | Maps users to events with an admin role. All RLS policies use this table. |
+| `event_invitations` | Pending invitations to join an event as a co-admin. Expires after 7 days. |
+| `shift_templates` | Reusable shift definitions owned by a user, independent of any specific event. |
+
+## Row Level Security
+
+Every table in the schema has RLS enabled. The policies enforce that users can only read and write data for events where they appear in `event_admins`.
+
+The chain of access is:
+
+```
+auth.uid() → event_admins.user_id → event_admins.event_id → [table].event_id
+```
+
+For example, the RLS policy on `shifts` checks:
+
+```sql
+USING (
+  EXISTS (
+    SELECT 1 FROM event_admins
+    WHERE event_admins.event_id = shifts.event_id
+    AND event_admins.user_id = auth.uid()
+  )
+)
+```
+
+The `assignments` table has an extra join through `shifts` to reach `event_admins`. The `profiles` table uses a simpler `auth.uid() = id` check since profiles are personal, not event-scoped.
+
+<Info>
+  The Kiosk check-in flow uses the same Supabase client and the same RLS policies. The event admin who launched the kiosk is the authenticated user for all kiosk writes.
+</Info>

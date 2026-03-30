@@ -1,0 +1,103 @@
+---
+title: "Kiosk mode"
+description: "A tablet-optimised, self-service check-in station for on-site volunteer management."
+---
+
+Kiosk mode is a full-screen, high-contrast interface designed to run on a tablet at your event's check-in desk. Volunteers walk up, search their own name, and check themselves in or out — no admin needed at the terminal. It handles asset assignment at check-in and asset return at check-out automatically.
+
+## Launch kiosk mode
+
+Open the event you want to run kiosk for, then click **Launch Kiosk** in the Event Dashboard header. This opens the kiosk at `/events/{id}/kiosk` in full-page mode with a floating header showing the event name.
+
+To exit at any time, click **Exit Kiosk** in the top-right corner of the header. This returns you to the Event Dashboard.
+
+<Note>
+  Kiosk mode requires an authenticated session. If the session expires, the page redirects to the login screen. Keep admin credentials available at the check-in desk.
+</Note>
+
+## Self-service check-in flow
+
+The kiosk walks volunteers through a fixed sequence of steps.
+
+<Steps>
+  <Step title="Search by name">
+    The kiosk opens on a large search field with the prompt "Please enter your name to begin check-in." As the volunteer types, results appear in real time (debounced at 300 ms). Up to 20 matching profiles from the event are shown. Each result card displays the volunteer's name and group.
+  </Step>
+  <Step title="Confirm identity">
+    Tapping a result card opens the **Confirm** screen. The volunteer's name, group, and all their assigned shifts are displayed in chronological order. Each shift card shows the shift name and time window, along with a status button:
+
+    - **Check In** (green) — shift not yet started
+    - **Check Out** (red) — shift is currently active
+    - **Completed** (grey) — already checked in and out
+
+    The volunteer taps the appropriate button for their shift.
+  </Step>
+  <Step title="Handle assets (if applicable)">
+    If the volunteer is checking in and has a currently active shift with assets still assigned, the kiosk shows the **Switching Shifts** screen first (see [Smart shift transitions](#smart-shift-transitions)). Otherwise it proceeds directly to the **Select Equipment** step.
+
+    During check-in, the volunteer selects any equipment to take from the pool of available assets. During check-out, the **Verify Return** screen lists the assets currently assigned to them and marks them all as returning.
+  </Step>
+  <Step title="Complete action">
+    Tapping **Complete Check-In** or **Complete Check-Out** commits the action to the database. A large confirmation screen displays "Checked In!" or "Checked Out!" for 3 seconds, then the kiosk automatically resets to the search screen.
+  </Step>
+</Steps>
+
+## Asset assignment during check-in
+
+When a volunteer taps **Check In**, the kiosk shows a grid of all assets currently in `available` status for that event. Each tile shows the asset name, type icon, and identifier (e.g. `RAD-001`). The volunteer taps tiles to select the equipment they are taking.
+
+Selected assets are highlighted in blue with a check mark. The volunteer can deselect by tapping again.
+
+When the check-in is submitted:
+
+- A row is inserted into `asset_assignments` with `checked_out_at` set to the current time.
+- Each selected asset's `status` is updated to `assigned` and linked to the volunteer.
+- The activity log records the assignment under the `asset_out` event type.
+
+If there are no available assets in the inventory, the grid shows "No available equipment to assign." The volunteer can still complete check-in without selecting anything.
+
+## Asset return during check-out
+
+When a volunteer taps **Check Out**, the kiosk shows a **Verify Return** list of all assets currently assigned to them (those with a null `checked_in_at` in `asset_assignments`). They cannot deselect items — all listed assets are returned when check-out is confirmed.
+
+On submission:
+
+- `checked_in_at` is set to the current time on each `asset_assignment` row.
+- Each asset's `status` is reset to `available` and its `volunteer_id` is cleared.
+- The activity log records the return under the `asset_in` event type.
+
+## Smart shift transitions
+
+When a volunteer checks in to a new shift while they are still actively checked in to a previous one (e.g. back-to-back shifts), the kiosk detects the overlap and shows a **Switching Shifts** screen before the asset step.
+
+<CardGroup cols={2}>
+  <Card title="Yes, keep equipment" icon="box">
+    The previous shift is checked out automatically. The assets stay assigned to the volunteer and carry over to the new shift — no return or reassignment needed.
+  </Card>
+  <Card title="No, return and pick new" icon="arrow-right-arrow-left">
+    The previous shift is checked out and all current assets are returned to `available`. The volunteer then selects fresh equipment from the grid for the new shift.
+  </Card>
+</CardGroup>
+
+This transition is triggered only when the volunteer has at least one asset currently assigned. If they have no active assets, the kiosk skips the transition prompt and goes straight to the equipment selection grid.
+
+## Tablet setup tips
+
+<AccordionGroup>
+  <Accordion title="Orientation">
+    Use portrait orientation for the name search step; the large input field and result cards are optimised for vertical scroll. Landscape works well on larger tablets (11"+) where the asset grid benefits from the extra horizontal space.
+  </Accordion>
+  <Accordion title="Keep the display on">
+    Disable auto-lock and screen timeout on the tablet before placing it at the check-in desk. On iOS, go to **Settings → Display & Brightness → Auto-Lock** and set it to **Never**. On Android, go to **Settings → Display → Screen timeout**.
+  </Accordion>
+  <Accordion title="Browser kiosk mode">
+    To prevent volunteers from navigating away, open the URL in a browser's full-screen or guided access mode. On iOS, use **Guided Access** (triple-press the side button). On Android, use **Screen Pinning** under **Settings → Security**.
+  </Accordion>
+  <Accordion title="Network access">
+    The kiosk makes live database requests — ensure the tablet has a stable Wi-Fi or cellular connection. A dropped connection during check-in will show an error notification and no data will be saved.
+  </Accordion>
+</AccordionGroup>
+
+<Tip>
+  If you expect high traffic at the check-in desk, consider running two tablets side by side. Each kiosk session is independent and concurrent check-ins are handled safely.
+</Tip>

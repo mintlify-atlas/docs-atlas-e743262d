@@ -1,0 +1,153 @@
+---
+title: "Environment Variables"
+description: "Configure the required and optional environment variables for Shift Scheduler before running the development server or deploying to production."
+---
+
+Create a `.env.local` file in the project root. This file is ignored by git and is never committed to version control.
+
+## Required variables
+
+These two variables are required for the app to start. Without them, all Supabase calls will fail.
+
+```env .env.local
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `NEXT_PUBLIC_SUPABASE_URL` | The base URL of your Supabase project. Found in **Project Settings → API → Project URL**. |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | The public anon key for your Supabase project. Found in **Project Settings → API → Project API keys**. This key is safe to expose in the browser — access is controlled by Row Level Security policies. |
+
+<Warning>
+  Do not use the `service_role` key in `.env.local`. It bypasses all RLS policies and would give any browser session full database access.
+</Warning>
+
+## Scheduler API variables
+
+The Go Scheduler API is called server-side when Auto-Assign is triggered. These variables configure the connection.
+
+```env .env.local
+SCHEDULER_API_KEY=your-hmac-api-key
+SCHEDULER_API_URL=https://shift-scheduler-api-3nxm.vercel.app
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `SCHEDULER_API_KEY` | HMAC key used to sign requests to the Go Scheduler API. Obtain this from the [API Admin dashboard](https://shift-scheduler-api-3nxm.vercel.app/admin). |
+| `SCHEDULER_API_URL` | Base URL for the Go Scheduler API. Defaults to the hosted instance if not set. Override this if you are running your own instance of the scheduler. |
+
+<Info>
+  The Go Scheduler API is an external service — you do not need to run it locally. The hosted instance at `shift-scheduler-api-3nxm.vercel.app` is available for use. API authentication uses stateless HMAC signatures, so no session management is required.
+</Info>
+
+## Site URL
+
+Required for email-based flows (invitation links, password reset) to construct absolute callback URLs.
+
+```env .env.local
+NEXT_PUBLIC_SITE_URL=https://your-domain.com
+```
+
+In local development, set this to `http://localhost:3000`.
+
+## SMTP (email)
+
+Used for sending event invitation emails via Nodemailer. All five variables must be set together for email to work.
+
+```env .env.local
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-smtp-username
+SMTP_PASS=your-smtp-password
+CONTACT_EMAIL=admin@your-domain.com
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `SMTP_HOST` | Hostname of your SMTP server (e.g., `smtp.gmail.com`, `smtp.sendgrid.net`). |
+| `SMTP_PORT` | SMTP port. Use `587` for STARTTLS or `465` for SSL. |
+| `SMTP_SECURE` | Set to `true` for port 465 (SSL), `false` for port 587 (STARTTLS). |
+| `SMTP_USER` | SMTP authentication username. |
+| `SMTP_PASS` | SMTP authentication password or app-specific password. |
+| `CONTACT_EMAIL` | The recipient address for contact form submissions. |
+
+<Note>
+  Email sending is optional. If SMTP variables are not configured, event invitations will not be sent. Admins can still be added manually via the event admin panel.
+</Note>
+
+## Broadcast Hub (email blasts)
+
+Used for sending bulk email announcements to volunteers from the **Broadcast** page (`/events/[id]/broadcast`). The Broadcast Hub rotates sends across three Gmail accounts to stay within Gmail's per-account sending limits. All six variables must be set together for broadcasting to work.
+
+```env .env.local
+GMAIL_USER_1=account1@gmail.com
+GMAIL_PASS_1=app-password-1
+GMAIL_USER_2=account2@gmail.com
+GMAIL_PASS_2=app-password-2
+GMAIL_USER_3=account3@gmail.com
+GMAIL_PASS_3=app-password-3
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `GMAIL_USER_1` / `GMAIL_USER_2` / `GMAIL_USER_3` | Gmail addresses used as rotating send accounts. |
+| `GMAIL_PASS_1` / `GMAIL_PASS_2` / `GMAIL_PASS_3` | App-specific passwords for each Gmail account. Generate these in **Google Account → Security → App passwords**. |
+
+<Note>
+  Recipients are added as BCC (blind carbon copy) on each batch to protect their privacy. Batches are capped at 25 recipients per send to stay within Gmail limits.
+</Note>
+
+## Axiom logging (optional)
+
+Shift Scheduler integrates with [Axiom](https://axiom.co) for server-side logging and Web Vitals tracking via `@axiomhq/nextjs`. These variables are optional — the app runs normally without them.
+
+```env .env.local
+NEXT_PUBLIC_AXIOM_TOKEN=your-axiom-ingest-token
+NEXT_PUBLIC_AXIOM_DATASET=your-dataset-name
+```
+
+| Variable | Description |
+| :--- | :--- |
+| `NEXT_PUBLIC_AXIOM_TOKEN` | Your Axiom ingest token. Found in **Axiom → Settings → API Tokens**. |
+| `NEXT_PUBLIC_AXIOM_DATASET` | The Axiom dataset name to write events to. |
+
+<Tip>
+  Axiom logging is useful in production to capture Next.js Web Vitals (LCP, FID, CLS) and server-side errors. Skip it for local development.
+</Tip>
+
+## Full example
+
+```env .env.local
+# Required
+NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijkl.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+# Scheduler API
+SCHEDULER_API_KEY=your-hmac-key
+SCHEDULER_API_URL=https://shift-scheduler-api-3nxm.vercel.app
+
+# Site URL
+NEXT_PUBLIC_SITE_URL=http://localhost:3000
+
+# SMTP (optional)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=you@example.com
+SMTP_PASS=app-password
+CONTACT_EMAIL=admin@example.com
+
+# Broadcast Hub (optional)
+GMAIL_USER_1=account1@gmail.com
+GMAIL_PASS_1=app-password-1
+GMAIL_USER_2=account2@gmail.com
+GMAIL_PASS_2=app-password-2
+GMAIL_USER_3=account3@gmail.com
+GMAIL_PASS_3=app-password-3
+
+# Axiom (optional)
+NEXT_PUBLIC_AXIOM_TOKEN=xaat-...
+NEXT_PUBLIC_AXIOM_DATASET=shift-scheduler-logs
+```

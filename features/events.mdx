@@ -1,0 +1,115 @@
+---
+title: "Events"
+description: "Events are the top-level container in Shift Scheduler. Each event holds its own volunteers, shifts, assignments, assets, and analytics."
+---
+
+An event represents a single coordination operation — a conference, a race, a multi-day festival, or any staffed occasion. Everything else in Shift Scheduler (shifts, volunteer rosters, group definitions, check-in records, and asset pools) belongs to exactly one event.
+
+## Creating an event
+
+<Steps>
+  <Step title="Open the events dashboard">
+    Navigate to the main dashboard at `/events`. You see all coordination hubs you own or have been invited to administer.
+  </Step>
+  <Step title="Click Create Hub">
+    Click the **Create Hub** button in the top-right corner of the events grid. A modal appears.
+  </Step>
+  <Step title="Enter an event name">
+    Type a descriptive name such as `Summer Gala 2026` or `Regional Championship`. The event date defaults to today and can be changed later in settings.
+
+    Your local timezone is captured automatically at creation time.
+  </Step>
+  <Step title="Submit">
+    Click **Create Coordination Hub**. You are redirected immediately to the new event's dashboard.
+  </Step>
+</Steps>
+
+<Note>
+  Only the creating user is granted the `admin` role by default. Use **Manage Access** on the event card to invite other coordinators.
+</Note>
+
+## Event dashboard
+
+After opening an event you land on its Command Center — a real-time overview of operational status.
+
+### Quick stats
+
+The top row shows four live metrics:
+
+| Stat | Description |
+|------|-------------|
+| **Fill Rate** | Percentage of required shift slots that have an assigned volunteer. Displays green (80%+), yellow (50%+), or red (below 50%). |
+| **Volunteers** | Total registered volunteers in this event. |
+| **Hours Tracked** | Projected total demand hours across all shifts. |
+| **Active Personnel** | Volunteers currently checked in on-site. Links to the live active list. |
+
+A secondary row shows **Total Shifts**, **Total Slots**, and **Late Arrivals**.
+
+### Analytics charts
+
+The **Operational Intelligence** panel renders two pie charts powered by Recharts:
+
+- **Volunteers by group** — shows the distribution of your roster across groups such as Medical, Security, and General Volunteers.
+- **Shift fill status** — shows how many shifts are fully filled, partially filled, or unfilled.
+
+These charts update whenever the dashboard data is refreshed.
+
+### Live feed
+
+The dashboard displays the most recent volunteer check-ins in a live feed widget. Click **View All** to open the full check-in log.
+
+## Event modules
+
+From the Command Center you can navigate directly to each management area:
+
+<CardGroup cols={3}>
+  <Card title="Shifts" icon="calendar" href="/features/shifts">
+    Create and manage time slots, group requirements, and recurring schedules.
+  </Card>
+  <Card title="Volunteers" icon="users" href="/features/volunteers">
+    Add volunteer profiles, assign groups, and manage max-hours constraints.
+  </Card>
+  <Card title="Assignments" icon="list-check" href="/features/assignments">
+    Manually assign volunteers to shifts or use Auto-Assign to fill slots automatically.
+  </Card>
+  <Card title="Assets" icon="box-archive" href="/features/assets">
+    Track radios, vests, and other equipment checked out during the event.
+  </Card>
+  <Card title="Reports" icon="chart-bar" href="/features/reports">
+    Export CSV schedules, generate PDF sign-in sheets, and download volunteer schedules.
+  </Card>
+  <Card title="Kiosk" icon="tablet-screen-button" href="/features/kiosk">
+    Launch the tablet-friendly self-service check-in interface for on-site use.
+  </Card>
+</CardGroup>
+
+## Cloning an event
+
+Cloning duplicates the entire shift structure of an existing event into a new one. Volunteer rosters and assignments are not copied — only the shift definitions (names, times, group requirements).
+
+<Steps>
+  <Step title="Open the source event">
+    Navigate to the Command Center of the event you want to duplicate.
+  </Step>
+  <Step title="Open the Clone modal">
+    Click the **Clone Event** button in the header area next to **Launch Kiosk**.
+  </Step>
+  <Step title="Name the new event">
+    Enter a name for the cloned event. The new event is created with the same timezone as the original.
+  </Step>
+  <Step title="Review the result">
+    After cloning, you are redirected to the new event's dashboard. All shifts from the source event appear under **Shifts**, ready to be staffed.
+  </Step>
+</Steps>
+
+<Tip>
+  Cloning is the fastest way to set up recurring events like annual conferences. Clone last year's event, adjust shift times if needed, then import your updated volunteer list.
+</Tip>
+
+## Deleting an event
+
+<Warning>
+  Deleting an event permanently removes all associated shifts, volunteers, assignments, and assets. This action cannot be undone.
+</Warning>
+
+To delete an event, hover over its card on the events dashboard and click the trash icon that appears. You must be the event owner (not just an invited admin) to delete it.

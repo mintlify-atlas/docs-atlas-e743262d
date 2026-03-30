@@ -1,0 +1,161 @@
+---
+title: Bulk Import (CSV)
+description: Import volunteers and shifts in bulk from a CSV file. Covers column formats, auto-matching behavior, and error handling.
+---
+
+Both volunteers and shifts can be imported in bulk using a CSV file. This is the fastest way to populate a new event from an existing spreadsheet or external system.
+
+## What you can import
+
+<CardGroup cols={2}>
+  <Card title="Volunteers" icon="users">
+    Name, group, max hours, email, and phone for each volunteer.
+  </Card>
+  <Card title="Shifts" icon="clock">
+    Shift name, start time, end time, and group requirements.
+  </Card>
+</CardGroup>
+
+## CSV format for volunteers
+
+The importer recognizes multiple header aliases for each field. Use any of the accepted column names below:
+
+| Field | Accepted column names |
+| :---- | :-------------------- |
+| Name  | `Name`, `name`, `Volunteer`, `volunteer`, `Full Name`, `full name` |
+| Group | `Group`, `group`, `Role`, `role` |
+| Max hours | `Max Hours`, `max_hours`, `Hours`, `hours`, `Limit`, `limit` |
+| Phone | `Phone`, `phone`, `Mobile`, `mobile`, `Tel`, `tel` |
+| Email | `Email`, `email`, `Mail`, `mail` |
+
+A **Name** (or one of its aliases) column is required. All other columns are optional.
+
+**Sample volunteers CSV** (`sample_volunteers.csv`):
+
+```csv
+Name,Group,Max Hours,Email,Phone
+Delegate 1,Delegates,10,delegate1@example.com,(555) 101-0001
+Delegate 2,Delegates,10,delegate2@example.com,(555) 101-0002
+Adult 66,Adults,12,adult66@example.com,(555) 201-0066
+```
+
+## CSV format for shifts
+
+The shifts importer uses the following columns:
+
+| Column   | Description |
+| :------- | :---------- |
+| `Name`   | Human-readable shift label (e.g. `Shift 1`). |
+| `Start`  | Start date and time in `MM/DD/YYYY HH:MM AM/PM` format. |
+| `End`    | End date and time in the same format. |
+| `Groups` | Required group requirements as `GroupName:count` pairs, comma-separated (e.g. `Delegates:2, Adults:2`). |
+
+**Sample shifts CSV** (`sample_shifts.csv`):
+
+```csv
+Name,Start,End,Groups
+Shift 1,12/01/2025 08:00 AM,12/01/2025 10:00 AM,"Delegates:2, Adults:2"
+Shift 2,12/01/2025 10:00 AM,12/01/2025 12:00 PM,"Delegates:2, Adults:2"
+Shift 3,12/01/2025 12:00 PM,12/01/2025 02:00 PM,"Delegates:2, Adults:2"
+```
+
+<Note>
+  Wrap the `Groups` value in double quotes when it contains commas, as shown above. Standard CSV quoting rules apply.
+</Note>
+
+## How to import
+
+### Importing volunteers
+
+<Steps>
+  <Step title="Navigate to Volunteers">
+    Open your event and click **Volunteers** in the sidebar.
+  </Step>
+  <Step title="Open the import modal">
+    Click the **Import** button (upload icon) in the toolbar. The import modal opens.
+  </Step>
+  <Step title="Download the template (optional)">
+    If you do not have a file ready, click **Download CSV Template** to get a pre-formatted Google Sheets template you can copy and fill in.
+  </Step>
+  <Step title="Select your file">
+    Click **Select File** and choose your `.csv` file. The importer parses the file client-side using PapaParse.
+  </Step>
+  <Step title="Review the preview">
+    A preview table shows the first 50 parsed rows with Name, Group, and Hours columns. If the data looks correct, proceed.
+  </Step>
+  <Step title="Confirm import">
+    Click **Confirm Import (N)** where `N` is the total number of rows. All volunteers are inserted into the event in one batch.
+  </Step>
+</Steps>
+
+### Importing shifts
+
+<Steps>
+  <Step title="Navigate to Shifts">
+    Open your event and click **Shifts** in the sidebar.
+  </Step>
+  <Step title="Click Import CSV">
+    Click the **Import CSV** button in the Shifts toolbar.
+  </Step>
+  <Step title="Upload and confirm">
+    Select your shifts `.csv` file and confirm the import.
+  </Step>
+</Steps>
+
+## Column auto-matching
+
+The volunteer importer automatically detects which column maps to which field using the alias lists above. For example, a column named `Role` is treated as the group field, and a column named `Mobile` is treated as the phone field.
+
+You do not need to rename your columns as long as they match one of the accepted aliases. The matching is case-sensitive — `Name` is recognized but `NAME` is not.
+
+## Error handling
+
+The importer validates the file before inserting any rows and will show an error if:
+
+<AccordionGroup>
+  <Accordion title="Missing Name column">
+    The file does not contain a `Name`, `Volunteer`, or `Full Name` column (or any recognized alias). No rows are imported. Add a name column and re-upload.
+  </Accordion>
+  <Accordion title="Unrecognized column headers">
+    One or more column headers are not in the recognized alias list. The error message lists every unrecognized column name. Either rename the columns or use the official CSV template.
+
+    ```
+    Invalid file format: Unrecognized columns found: badge_number, region.
+    Please use the template.
+    ```
+  </Accordion>
+  <Accordion title="Shift CSV uploaded to Volunteers">
+    If you upload a shifts file (which contains `Start`, `End`, or similar headers) on the Volunteers page, the importer detects the mismatch and blocks the import:
+
+    ```
+    It looks like you are trying to upload a Shift CSV.
+    Please use the Shift Import feature in the "Shifts" tab.
+    ```
+  </Accordion>
+  <Accordion title="No valid rows found">
+    Every row either has an empty name or failed to parse. A warning is shown and nothing is inserted.
+  </Accordion>
+  <Accordion title="Parse error">
+    The file is malformed (e.g. invalid encoding or binary content). PapaParse returns an error message that is displayed directly.
+  </Accordion>
+</AccordionGroup>
+
+<Warning>
+  Bulk import adds volunteers on top of any existing records — it does not replace them. If you need to start fresh, use the **Delete All** button on the Volunteers page before importing.
+</Warning>
+
+## Sample CSV templates
+
+You can download ready-to-use templates to get the correct column format:
+
+- **Volunteers template** — [Open in Google Sheets](https://docs.google.com/spreadsheets/d/1SBULQrNoxh_ShzWPl9asw4AV1QL6vvviTmLr3ascY54/copy) (creates a personal copy you can edit and export as CSV)
+- **Shifts template** — use `sample_shifts.csv` in the repository root as a reference
+
+<CardGroup cols={2}>
+  <Card title="Volunteers" icon="users" href="/features/volunteers">
+    Manually add and edit volunteer records.
+  </Card>
+  <Card title="Shifts" icon="clock" href="/features/shifts">
+    Create and manage shifts for your event.
+  </Card>
+</CardGroup>

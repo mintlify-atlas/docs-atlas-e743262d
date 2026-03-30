@@ -1,0 +1,71 @@
+---
+title: "Check-in & attendance"
+description: "Mark volunteer attendance, monitor who is on-site, and flag late arrivals from the admin check-in page."
+---
+
+The **Check-In** page is the admin-facing attendance tool. It is separate from [Kiosk mode](/features/kiosk), which is for volunteer self-service. Use the Check-In page when you want to mark attendance manually — for example, from a laptop at the operations desk or when correcting records after the fact.
+
+Navigate to it from the event sidebar: **Event → Check-In**.
+
+## Shift list
+
+All shifts for the event are displayed as cards, sorted by urgency:
+
+1. **Late / Missing** shifts (started but not all volunteers checked in) appear at the top, highlighted in red.
+2. **Upcoming** shifts appear in the middle, sorted chronologically.
+3. **Completed** shifts (all volunteers checked in, or shift ended) appear at the bottom, greyed out.
+
+Each shift card shows the shift name, date, and time window. Inside the card, every assigned volunteer appears as a row with a checkbox.
+
+Use the search field at the top of the page to filter by volunteer name, date, or time. Matching shifts and volunteers appear instantly.
+
+## Marking attendance
+
+To check in a volunteer, tick the checkbox next to their name. To undo a check-in, untick the same checkbox. The change is saved immediately — there is no confirm step.
+
+<Note>
+  Checking in via this page sets the `checked_in` flag but does not set `checked_in_at` or handle asset assignment. For a full check-in with timestamps and equipment, use [Kiosk mode](/features/kiosk).
+</Note>
+
+## Active currently vs total checked in
+
+Two metrics on the Event Dashboard track attendance in real time:
+
+<CardGroup cols={2}>
+  <Card title="Active currently" icon="user-check">
+    Volunteers who are checked in (`checked_in = true`) and have not yet checked out (`checked_out_at` is null). This is the count of people physically on-site right now.
+  </Card>
+  <Card title="Total checked in" icon="clipboard-list">
+    Anyone who has ever checked in during the event (`checked_in = true`), regardless of whether they have since checked out. This is the attendance headcount.
+  </Card>
+</CardGroup>
+
+## Late arrival flagging
+
+A volunteer is flagged as **Late / Missing** when:
+
+- The shift start time has passed, **and**
+- Their `checked_in` value is `false`, **and**
+- Their `late_dismissed` flag is `false`.
+
+When a shift has at least one late/missing volunteer, the entire shift card moves to the top of the list and shows a red **Late / Missing** badge. Individual late volunteer rows also show a **Dismiss Warning** button.
+
+### Dismissing and undismissing warnings
+
+If a late volunteer has a known excuse — or you have confirmed they are not coming — click **Dismiss Warning** next to their name. This sets `late_dismissed = true` and removes the red flag from their row. The shift card will re-sort once all late warnings are dismissed or resolved.
+
+To reverse a dismissal, click **Undismiss** next to the volunteer's name. This resets `late_dismissed = false` and re-activates the late flag.
+
+<Warning>
+  Dismissing a warning does not mark the volunteer as checked in. It only silences the alert. If the volunteer arrives late, you still need to tick their checkbox to record their attendance.
+</Warning>
+
+## Undoing a check-in
+
+To undo a check-in, untick the checkbox next to the volunteer's name. The `checked_in` flag is set back to `false` immediately. If the shift start time has passed, this will re-trigger the late warning for that volunteer (assuming `late_dismissed` is still `false`).
+
+If a volunteer was checked in via Kiosk and has a `checked_in_at` timestamp, unticking the checkbox here will clear the `checked_in` flag but will not clear `checked_in_at`. For full corrections including timestamps and asset records, use the Kiosk check-out flow.
+
+## Live feed
+
+The Event Dashboard includes a **Live Feed** panel showing the most recent check-in and check-out activity across all shifts. Each entry in the feed shows the volunteer name, the action type (check-in, check-out, asset issued, asset returned), and the timestamp. The feed is sourced from the `activity_log` table and reflects Kiosk actions as well as manual admin check-ins.

@@ -1,0 +1,59 @@
+---
+title: "Introduction"
+description: "Shift Scheduler is a full-stack web app for managing event volunteers, shifts, and on-site check-ins — from initial scheduling through kiosk-based attendance tracking."
+---
+
+Shift Scheduler replaces manual spreadsheets with a purpose-built admin dashboard and tablet-friendly kiosk for event staffing operations. You define the event structure — groups, shifts, requirements — and the system handles assignment logic, conflict detection, asset tracking, and attendance reporting.
+
+It is built for single-day and multi-shift events where volunteers need to be organized into roles (e.g., Medical, Security, General), assigned to time slots, and checked in on-site with equipment.
+
+<Note>
+  Shift Scheduler is deployed on Render's free plan. The service may spin down after inactivity, causing a brief cold-start delay on first load.
+</Note>
+
+## Key capabilities
+
+<CardGroup cols={3}>
+  <Card title="Events" icon="calendar-days" href="/features/events">
+    Create and manage events with a real-time dashboard showing fill rates, attendance counts, and volunteer distribution.
+  </Card>
+  <Card title="Volunteers" icon="users" href="/features/volunteers">
+    Build a volunteer database with group affiliations, max-hours limits, contact info, and bulk CSV import.
+  </Card>
+  <Card title="Assignments" icon="list-check" href="/features/assignments">
+    Manually assign volunteers to shifts or use Auto-Assign to fill open slots automatically, with conflict detection to prevent double-booking.
+  </Card>
+  <Card title="Kiosk" icon="tablet-screen-button" href="/features/kiosk">
+    A tablet-friendly self-service check-in interface for on-site use. Volunteers search by name to check in and out.
+  </Card>
+  <Card title="Assets" icon="box-archive" href="/features/assets">
+    Manage a pool of equipment (radios, vests, keys) and track which volunteer has each item during a shift.
+  </Card>
+  <Card title="Reports" icon="chart-bar" href="/features/reports">
+    Export volunteer schedules, sign-in sheets, and attendance data as CSV or PDF.
+  </Card>
+</CardGroup>
+
+## Architecture
+
+Shift Scheduler uses three main layers:
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| **Frontend** | Next.js 16 (App Router) | Admin dashboard, kiosk UI, and all user-facing pages |
+| **Database & Auth** | Supabase (PostgreSQL) | Data persistence, Row Level Security, and user authentication |
+| **Scheduling Engine** | Go Scheduler API v2.1 | Stateless HMAC-authenticated service that computes optimal volunteer-to-shift assignments |
+
+The Next.js app communicates with Supabase directly from the browser using the Supabase JS client. The Go scheduler API is an external service called from the server side when Auto-Assign is triggered — no additional infrastructure is required on your end.
+
+The app is installable as a Progressive Web App (PWA) via `@ducanh2912/next-pwa`, which generates a `manifest.json` and service worker for add-to-home-screen support on mobile and tablet devices.
+
+## Free plan note
+
+The hosted version runs on Render's **free** service tier. This means:
+
+- The web service sleeps after 15 minutes of inactivity.
+- The first request after inactivity may take 30–60 seconds to respond while the container wakes up.
+- There are no uptime guarantees on the free tier.
+
+For production use with high availability requirements, deploy to a paid Render plan or another Node.js host. See [Installation](/setup/installation) for self-hosting instructions.

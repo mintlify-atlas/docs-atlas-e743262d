@@ -1,0 +1,114 @@
+---
+title: Volunteers
+description: Manage the volunteer roster for an event — add, edit, and remove volunteers, assign them to groups, and cap their working hours.
+---
+
+Volunteers are the core personnel records for each event. Every volunteer belongs to a single event, can be assigned to a group, and optionally carries a maximum-hours limit that the Auto-Assign engine respects.
+
+## Volunteer record fields
+
+Each volunteer record stores the following fields:
+
+| Field         | Required | Description |
+| :------------ | :------- | :---------- |
+| `name`        | Yes      | Full display name shown across the app and in the Kiosk. |
+| `group`       | No       | Group affiliation (e.g. `Delegates`, `Adults`, `Medical`). Controls which shifts this volunteer is eligible for. |
+| `max_hours`   | No       | Maximum hours this volunteer may be scheduled. Leave blank for unlimited. |
+| `email`       | No       | Contact email address. |
+| `phone`       | No       | Contact phone number. |
+| `external_id` | No       | Optional identifier for mapping volunteers imported from an external system. |
+
+<Info>
+  `external_id` is stored in the database schema but is not exposed in the manual-add form. It is only populated via CSV import when your file contains a matching column.
+</Info>
+
+## Adding volunteers manually
+
+<Steps>
+  <Step title="Open the Volunteers page">
+    Navigate to your event, then click **Volunteers** in the sidebar. The page shows the full personnel directory for that event.
+  </Step>
+  <Step title="Click Add Volunteer">
+    Click the **Add Volunteer** button in the top-right toolbar. A form expands below the header.
+  </Step>
+  <Step title="Fill in the details">
+    Enter at minimum a **Full Name**. Optionally select a **Group Assignment** from the dropdown, enter a **Phone Number**, an **Email Address**, and a **Max Hours** value.
+
+    The **Max Hours** field accepts decimal steps of `0.5` — for example, `8.5` hours.
+  </Step>
+  <Step title="Confirm">
+    Click **Confirm Addition**. The volunteer appears at the top of the list immediately.
+  </Step>
+</Steps>
+
+## Inline editing
+
+You can update any volunteer's details without leaving the list view.
+
+<Steps>
+  <Step title="Hover over the row">
+    Hover over a volunteer row. The **Edit** (pencil) and **Delete** (trash) action buttons appear on the right.
+  </Step>
+  <Step title="Click Edit">
+    Click the pencil icon. The row expands into an inline edit form with pre-filled fields for name, group, max hours, phone, and email.
+  </Step>
+  <Step title="Save changes">
+    Modify any field, then click the green checkmark to save. Click the grey X to discard changes.
+  </Step>
+</Steps>
+
+<Tip>
+  Use the search bar to filter volunteers by name or group before editing. This is faster than scrolling when managing large rosters.
+</Tip>
+
+## Removing volunteers
+
+To remove a single volunteer, hover over their row and click the **trash icon**. A confirmation dialog will appear before the record is deleted.
+
+To remove **all** volunteers at once, click the trash icon in the toolbar (top-left of the volunteer list). This action cannot be undone.
+
+<Warning>
+  Deleting a volunteer also removes all of their assignments. Shifts they were filling will become unfilled.
+</Warning>
+
+## Volunteer groups
+
+Groups categorize volunteers by role (e.g. `Medical`, `Security`, `Delegates`). Groups are color-coded and appear as badges throughout the assignment interface.
+
+You manage groups from the **Manage Groups** page, accessible via the button at the top of the Volunteers page. From there you can create groups with custom colors and rename or delete existing groups.
+
+<Note>
+  A volunteer's group must match the `required_groups` setting on a shift for Auto-Assign to place them there. See [Groups](/features/groups) for full details on how group requirements work.
+</Note>
+
+## Max hours and Auto-Assign
+
+The **Max Hours** field caps the total hours a volunteer will be scheduled during Auto-Assign.
+
+When Auto-Assign runs, the Go Scheduler API receives each volunteer's `max_hours` value. The engine will not assign a volunteer to a shift if doing so would push their cumulative scheduled hours above that limit. Volunteers with no `max_hours` set are treated as having a limit of `999` hours, effectively unlimited.
+
+If a volunteer cannot be placed because their max hours would be exceeded, the affected shift appears in the API's `conflicts` response with a reason such as:
+
+```
+Volunteer vol_7 already reached max_hours (40.0)
+```
+
+These conflicts are surfaced in the **Scheduling Insights** panel on the Assignments page.
+
+## Conflict detection
+
+The Assignments page performs real-time conflict checking on the existing schedule. A conflict is flagged when:
+
+- A volunteer is assigned to two shifts whose time windows overlap (`StartA < EndB && StartB < EndA`).
+- A volunteer's total assigned hours exceed their `max_hours` limit.
+
+Shifts with conflicts are sorted to the top of the Assignments list and highlighted in yellow. The exact conflict message — including the volunteer's name, hours, and limit — is shown inline on each affected shift card.
+
+<CardGroup cols={2}>
+  <Card title="Groups" icon="users" href="/features/groups">
+    Create and manage volunteer groups with color-coding.
+  </Card>
+  <Card title="Assignments" icon="calendar-check" href="/features/assignments">
+    Assign volunteers to shifts manually or with Auto-Assign.
+  </Card>
+</CardGroup>

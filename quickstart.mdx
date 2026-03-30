@@ -1,80 +1,108 @@
 ---
-title: "Quickstart"
-description: "Start building awesome documentation in minutes"
+title: "Quick Start"
+description: "Create your first event, build a shift schedule, assign volunteers, and launch the check-in kiosk — in under 15 minutes."
 ---
 
-## Get started in three steps
+This guide walks you through the core workflow from a fresh account to a live kiosk. Each step corresponds to a section of the admin UI.
 
-Get your documentation site running locally and make your first customization.
+<Steps>
 
-### Step 1: Set up your local environment
+  <Step title="Sign up">
+    Go to the Shift Scheduler app and create an account using your email address. After confirming your email, you will be redirected to the **Events** dashboard.
 
-<AccordionGroup>
-  <Accordion icon="copy" title="Clone your docs locally">
-    During the onboarding process, you created a GitHub repository with your docs content if you didn't already have one. You can find a link to this repository in your [dashboard](https://dashboard.mintlify.com).
-    
-    To clone the repository locally so that you can make and preview changes to your docs, follow the [Cloning a repository](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository) guide in the GitHub docs.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Start the preview server">
-    1. Install the Mintlify CLI: `npm i -g mint`
-    2. Navigate to your docs directory and run: `mint dev`
-    3. Open `http://localhost:3000` to see your docs live!
-    
-    <Tip>Your preview updates automatically as you edit files.</Tip>
-  </Accordion>
-</AccordionGroup>
+    <Info>
+      If you are joining an existing event as a co-admin, accept the invitation email sent by the event owner instead of creating a new account.
+    </Info>
+  </Step>
 
-### Step 2: Deploy your changes
+  <Step title="Create an event">
+    From the **Events** dashboard, click **New Event**. Enter a name (e.g., "Spring Volunteer Day") and a date, then click **Create**.
 
-<AccordionGroup>
-  <Accordion icon="github" title="Install our GitHub app">
-    Install the Mintlify GitHub app from your [dashboard](https://dashboard.mintlify.com/settings/organization/github-app).
-    
-    Our GitHub app automatically deploys your changes to your docs site, so you don't need to manage deployments yourself.
-</Accordion>
-<Accordion icon="palette" title="Update your site name and colors">
-    For a first change, let's update the name and colors of your docs site.
+    The event opens directly to its **Dashboard** page, which shows fill-rate charts and live stats. The event is empty until you add groups, shifts, and volunteers.
+  </Step>
 
-    1. Open `docs.json` in your editor.
-    2. Change the `"name"` field to your project name.
-    3. Update the `"colors"` to match your brand.
-    4. Save and see your changes instantly at `http://localhost:3000`.
+  <Step title="Add volunteer groups">
+    Click **Manage Groups** in the event sidebar. Groups represent roles or teams — for example, "Medical", "Security", or "General Volunteers".
 
-    <Tip>Try changing the primary color to see an immediate difference!</Tip>
-  </Accordion>
-</AccordionGroup>
+    For each group:
+    1. Enter a group name.
+    2. Choose a display color (used in the assignment grid and kiosk).
+    3. Optionally set a default max-hours limit for all volunteers in this group.
+    4. Click **Save**.
 
-### Step 3: Go live
+    <Tip>
+      Create groups before adding shifts. Shifts reference groups to define which volunteers can fill each slot.
+    </Tip>
+  </Step>
 
-<Accordion icon="rocket" title="Publish your docs">
-  1. Commit and push your changes.
-  2. Your docs will update and be live in moments!
-</Accordion>
+  <Step title="Add shifts">
+    Click **Shifts** in the sidebar. Create shifts manually or import them from a CSV file.
+
+    For each shift, set:
+    - **Name** — a short label displayed in the kiosk (e.g., "Morning Gate").
+    - **Start time** and **End time** — with timezone.
+    - **Required groups** — a map of group name to headcount (e.g., `Security: 2, Medical: 1`).
+    - **Allowed groups** — groups permitted to fill any open slot beyond the required headcount.
+
+    To create multiple shifts quickly, use a **shift template** or the **recurring shifts** generator. See [Shifts](/features/shifts) for details.
+  </Step>
+
+  <Step title="Add volunteers">
+    Click **Volunteers** in the sidebar. Add volunteers manually or click **Import CSV** to bulk-upload a spreadsheet.
+
+    Each volunteer record includes:
+    - **Name** — used for kiosk search.
+    - **Group** — assigns the volunteer to one of the groups you created.
+    - **Max hours** — optional cap on how many hours the scheduler will assign to this person.
+    - **Email / Phone** — optional contact fields.
+
+    <Info>
+      See the [Bulk Import](/features/bulk-import) page for the expected column format and a sample CSV template.
+    </Info>
+  </Step>
+
+  <Step title="Run Auto-Assign">
+    Click **Assignments** in the sidebar. The assignment grid shows all shifts as columns and all volunteers as rows.
+
+    Click **Auto Assign** to send the shift and volunteer data to the Go Scheduler API. The engine fills open slots based on:
+    - Group requirements per shift.
+    - Each volunteer's max-hours constraint.
+    - Conflict prevention (no volunteer is double-booked).
+
+    After the algorithm completes, review the grid. You can manually drag volunteers to different shifts or remove assignments by clicking the `×` on any cell.
+
+    <Note>
+      The Auto-Assign button calls the external Go Scheduler API. If the API is unavailable, manual assignment still works.
+    </Note>
+  </Step>
+
+  <Step title="Launch Kiosk">
+    From the event **Dashboard**, click **Launch Kiosk**. The browser switches to a full-screen, tablet-optimized UI.
+
+    Volunteers approach the tablet, search for their name, and tap **Check In**. If the shift requires an asset (e.g., a radio), the kiosk prompts to assign one before confirming check-in.
+
+    At the end of a shift, volunteers tap **Check Out**. If they are moving to a consecutive shift, the kiosk offers to transfer any held assets automatically.
+
+    <Tip>
+      Set the tablet to guided access or kiosk mode in your OS settings to prevent volunteers from navigating away from the check-in screen.
+    </Tip>
+  </Step>
+
+</Steps>
 
 ## Next steps
 
-Now that you have your docs running, explore these key features:
-
 <CardGroup cols={2}>
-
-<Card title="Write Content" icon="pen-to-square" href="/essentials/markdown">
-  Learn MDX syntax and start writing your documentation.
-</Card>
-
-<Card title="Customize style" icon="palette" href="/essentials/settings">
-  Make your docs match your brand perfectly.
-</Card>
-
-<Card title="Add code examples" icon="square-code" href="/essentials/code">
-  Include syntax-highlighted code blocks.
-</Card>
-
-<Card title="API documentation" icon="code" href="/api-reference/introduction">
-  Auto-generate API docs from OpenAPI specs.
-</Card>
-
+  <Card title="Event management" icon="calendar-days" href="/features/events">
+    Clone events, use recurring templates, and manage multiple events from one account.
+  </Card>
+  <Card title="Asset tracking" icon="box-archive" href="/features/assets">
+    Add your equipment inventory and configure asset assignment during check-in.
+  </Card>
+  <Card title="Reports" icon="chart-bar" href="/features/reports">
+    Export sign-in sheets and attendance summaries as CSV or PDF.
+  </Card>
+  <Card title="API reference" icon="code" href="/api/overview">
+    Call the Go Scheduler API directly from your own systems.
+  </Card>
 </CardGroup>
-
-<Note>
-  **Need help?** See our [full documentation](https://mintlify.com/docs) or join our [community](https://mintlify.com/community).
-</Note>

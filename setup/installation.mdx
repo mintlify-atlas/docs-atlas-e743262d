@@ -1,0 +1,91 @@
+---
+title: "Installation"
+description: "Clone the Shift Scheduler web app, install dependencies, and run the development server locally."
+---
+
+## Prerequisites
+
+Before you begin, make sure you have the following:
+
+- **Node.js 20.x** — The `engines` field in `package.json` pins the required version. Use [nvm](https://github.com/nvm-sh/nvm) or [fnm](https://github.com/Schniz/fnm) to manage Node versions.
+- **A Supabase project** — Create one at [supabase.com](https://supabase.com). You will need the project URL and anon key. See [Database Setup](/setup/database) and [Environment Variables](/setup/environment).
+- **npm** — Comes bundled with Node.js. The project uses `package-lock.json`, so npm is preferred over Yarn or pnpm.
+
+## Install
+
+<Steps>
+
+  <Step title="Clone the repository">
+    ```bash
+    git clone https://github.com/greenmartialarts/shift-scheduler-web.git
+    cd shift-scheduler-web
+    ```
+  </Step>
+
+  <Step title="Install dependencies">
+    ```bash
+    npm install
+    ```
+
+    This installs all production and development dependencies defined in `package.json`, including Next.js, the Supabase client libraries, Tailwind CSS v4, and the PWA plugin.
+  </Step>
+
+  <Step title="Configure environment variables">
+    Create a `.env.local` file in the project root with your Supabase credentials:
+
+    ```env .env.local
+    NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+    NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+    ```
+
+    See [Environment Variables](/setup/environment) for the full list of supported variables, including optional SMTP and Axiom settings.
+  </Step>
+
+  <Step title="Run the database migrations">
+    Apply the SQL migrations in your Supabase SQL Editor before starting the app. See [Database Setup](/setup/database) for the full migration order and instructions.
+  </Step>
+
+  <Step title="Start the development server">
+    ```bash
+    npm run dev
+    ```
+
+    Open [http://localhost:3000](http://localhost:3000) in your browser. The app uses the Next.js App Router with Webpack (the `--webpack` flag is set explicitly to avoid Turbopack incompatibilities with some dependencies).
+  </Step>
+
+</Steps>
+
+## Available scripts
+
+| Command | Description |
+| :--- | :--- |
+| `npm run dev` | Start the development server with hot reload at `localhost:3000` |
+| `npm run build` | Compile a production build (outputs to `.next/`) |
+| `npm start` | Start the production server (requires a prior `npm run build`) |
+| `npm run lint` | Run ESLint across the `src/` directory |
+
+## Production deployment
+
+The project includes a `render.yaml` for one-click deployment to [Render](https://render.com):
+
+```yaml render.yaml
+services:
+  - type: web
+    name: scheduler-web
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+```
+
+Connect your repository to Render and it will use this configuration automatically. Set the required environment variables in the Render dashboard under **Environment**. See [Environment Variables](/setup/environment) for the full list.
+
+<Warning>
+  The free Render plan spins down after inactivity. For latency-sensitive deployments, upgrade to a paid plan or use an alternative Node.js host.
+</Warning>
+
+## PWA support
+
+The app is configured as a Progressive Web App using `@ducanh2912/next-pwa`. When built for production, Next.js generates a `manifest.json` and a service worker automatically. Users on Chrome or Safari can install the app to their home screen for an app-like experience — useful for tablets running the kiosk.
+
+No additional configuration is needed for PWA support. The `manifest.json` is served from `/manifest.json` and is referenced in the `<head>` via the `metadata.manifest` field in `src/app/layout.tsx`.
